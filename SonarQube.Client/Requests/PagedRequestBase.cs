@@ -33,8 +33,8 @@ namespace SonarQube.Client.Requests
     /// <typeparam name="TResponseItem">The type of the items returned by this request.</typeparam>
     public abstract class PagedRequestBase<TResponseItem> : RequestBase<TResponseItem[]>, IPagedRequest<TResponseItem>
     {
-        protected const int FirstPage = 1;
-        protected const int MaximumPageSize = 500;
+        private const int FirstPage = 1;
+        private const int MaximumPageSize = 500;
 
         [JsonProperty("p")]
         public virtual int Page { get; set; } = FirstPage;
