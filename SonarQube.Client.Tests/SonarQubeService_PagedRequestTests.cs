@@ -35,7 +35,7 @@ using SonarQube.Client.Requests;
 namespace SonarQube.Client.Tests
 {
     [TestClass]
-    public class SonarQubeService_PageRequestTests
+    public class SonarQubeService_PagedRequestTests
     {
         private static readonly Uri BasePath = new Uri("http://localhost");
         private Mock<HttpMessageHandler> messageHandler;
@@ -83,6 +83,7 @@ namespace SonarQube.Client.Tests
         }
 
         [TestMethod]
+        [Ignore] // See bug https://github.com/SonarSource/sonarqube-webclient-dotnet/issues/8
         public async Task RequestPageSize_IsRespected()
         {
             var request = new DummyPagedRequest
