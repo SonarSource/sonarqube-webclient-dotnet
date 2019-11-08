@@ -177,6 +177,17 @@ namespace SonarQube.Client.Tests
         }
 
         [TestMethod]
+        public async Task HasOrganizations_99_90_NonOkHttpResponse_ReturnsTrueXXX()
+        {
+            await ConnectToSonarQube("7.9.0.0", "https://SONARCLOUD.IO/foo/bar");
+
+            service.HasOrganizations(CancellationToken.None)
+                .Result
+                .Should().BeTrue();
+        }
+
+
+        [TestMethod]
         public void HasOrganizationsFeature_NotConnected()
         {
             // No calls to Connect
