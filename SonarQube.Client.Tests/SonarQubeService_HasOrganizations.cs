@@ -33,15 +33,14 @@ namespace SonarQube.Client.Tests
         public async Task HasOrganizations_NotSonarCloud_ReturnsFalse()
         {
             // Version should be irrelevant
-            await CheckDoesNotHaveOrganizations("5.6.0.0", "https://localhost/");
+            await CheckDoesNotHaveOrganizations("5.6.0.0", "http://localhost");
             await CheckDoesNotHaveOrganizations("6.0.0.0", "https://localhost/");
-            await CheckDoesNotHaveOrganizations("6.1.0.0", "https://localhost/");
-            await CheckDoesNotHaveOrganizations("6.7.0.0", "https://localhost/");
-            await CheckDoesNotHaveOrganizations("7.9.0.0", "https://localhost/");
-            await CheckDoesNotHaveOrganizations("99.99.0.0", "https://localhost/");
-
-            // With port
-            await CheckDoesNotHaveOrganizations("5.6.0.0", "https://localhost:9000/");
+            await CheckDoesNotHaveOrganizations("6.1.0.0", "https://localhost:9000");
+            await CheckDoesNotHaveOrganizations("6.7.0.0", "https://mysonarqubeserver/");
+            await CheckDoesNotHaveOrganizations("7.9.0.0", "https://notsonarcloud.io/");
+            await CheckDoesNotHaveOrganizations("7.9.0.0", "https://sonarcloud.ion/");
+            await CheckDoesNotHaveOrganizations("7.9.0.0", "http://sonarcloud.ion/");
+            await CheckDoesNotHaveOrganizations("99.99.0.0", "https://my.org.sonarqube:123");
         }
 
         [TestMethod]
