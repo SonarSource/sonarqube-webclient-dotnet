@@ -31,6 +31,7 @@ using SonarQube.Client.Models;
 using SonarQube.Client.Requests;
 using SonarQube.Client.Api;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace SonarQube.Client
 {
@@ -201,10 +202,12 @@ namespace SonarQube.Client
            await InvokeRequestAsync<IGetPluginsRequest, SonarQubePlugin[]>(token);
 
         public async Task<IList<SonarQubeProject>> GetAllProjectsAsync(string organizationKey, CancellationToken token) =>
+            
+            
             await InvokeRequestAsync<IGetProjectsRequest, SonarQubeProject[]>(
                 request =>
                 {
-                    request.OrganizationKey = organizationKey;
+                    request.OrganizationKey = GetOrganizationKeyForWebApiCalls(organizationKey);
                 },
                 token);
 
@@ -231,7 +234,7 @@ namespace SonarQube.Client
                 request =>
                 {
                     request.ProjectKey = projectKey;
-                    request.OrganizationKey = organizationKey;
+                    request.OrganizationKey = GetOrganizationKeyForWebApiCalls(organizationKey);
                 },
                 token);
 
@@ -255,7 +258,7 @@ namespace SonarQube.Client
                     request.QualityProfileKey = qualityProfile.Key;
                     request.QualityProfileName = qualityProfile.Name;
                     request.LanguageName = language.Key;
-                    request.OrganizationKey = organizationKey;
+                    request.OrganizationKey = GetOrganizationKeyForWebApiCalls(organizationKey);
                 },
                 token);
 
@@ -272,7 +275,7 @@ namespace SonarQube.Client
                 {
                     request.QualityProfileName = qualityProfileName;
                     request.LanguageKey = language.Key;
-                    request.OrganizationKey = organizationKey;
+                    request.OrganizationKey = GetOrganizationKeyForWebApiCalls(organizationKey);
                 },
                 token);
 
@@ -342,5 +345,19 @@ namespace SonarQube.Client
         }
         #endregion // IDisposable Support
 
+        private string GetOrganizationKeyForWebApiCalls(string organizationKey)
+        {
+            // Special fake internal key for testing binding to a large number of organizations.
+            // If the special key is used we'll pass null for the organization so no filtering will
+            // be done.
+            const string FakeInternalTestingOrgKey = "sonar.internal.testing.no.org";
+
+            if (FakeInternalTestingOrgKey.Equals(organizationKey, System.StringComparison.OrdinalIgnoreCase))
+            {
+                logger.Debug($"DEBUG: org key is {FakeInternalTestingOrgKey}. Setting it to null.");
+                return null;
+            }
+            return organizationKey;
+        }
     }
 }
