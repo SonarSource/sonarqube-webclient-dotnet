@@ -20,18 +20,17 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using SonarQube.Client.Api;
 using SonarQube.Client.Helpers;
 using SonarQube.Client.Logging;
 using SonarQube.Client.Messages;
 using SonarQube.Client.Models;
 using SonarQube.Client.Requests;
-using SonarQube.Client.Api;
-using System.IO;
-using System.Runtime.CompilerServices;
 
 namespace SonarQube.Client
 {
