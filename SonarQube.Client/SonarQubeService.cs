@@ -204,7 +204,7 @@ namespace SonarQube.Client
             await InvokeRequestAsync<IGetProjectsRequest, SonarQubeProject[]>(
                 request =>
                 {
-                    request.OrganizationKey = GetOrganizationKeyForWebApiCalls(organizationKey);
+                    request.OrganizationKey = GetOrganizationKeyForWebApiCalls(organizationKey, logger);
                 },
                 token);
 
@@ -231,7 +231,7 @@ namespace SonarQube.Client
                 request =>
                 {
                     request.ProjectKey = projectKey;
-                    request.OrganizationKey = GetOrganizationKeyForWebApiCalls(organizationKey);
+                    request.OrganizationKey = GetOrganizationKeyForWebApiCalls(organizationKey, logger);
                 },
                 token);
 
@@ -255,7 +255,7 @@ namespace SonarQube.Client
                     request.QualityProfileKey = qualityProfile.Key;
                     request.QualityProfileName = qualityProfile.Name;
                     request.LanguageName = language.Key;
-                    request.OrganizationKey = GetOrganizationKeyForWebApiCalls(organizationKey);
+                    request.OrganizationKey = GetOrganizationKeyForWebApiCalls(organizationKey, logger);
                 },
                 token);
 
@@ -272,7 +272,7 @@ namespace SonarQube.Client
                 {
                     request.QualityProfileName = qualityProfileName;
                     request.LanguageKey = language.Key;
-                    request.OrganizationKey = GetOrganizationKeyForWebApiCalls(organizationKey);
+                    request.OrganizationKey = GetOrganizationKeyForWebApiCalls(organizationKey, logger);
                 },
                 token);
 
@@ -342,7 +342,7 @@ namespace SonarQube.Client
         }
         #endregion // IDisposable Support
 
-        private string GetOrganizationKeyForWebApiCalls(string organizationKey)
+        internal /* for testing */ static string GetOrganizationKeyForWebApiCalls(string organizationKey, ILogger logger)
         {
             // Special fake internal key for testing binding to a large number of organizations.
             // If the special key is used we'll pass null for the organization so no filtering will
