@@ -201,8 +201,6 @@ namespace SonarQube.Client
            await InvokeRequestAsync<IGetPluginsRequest, SonarQubePlugin[]>(token);
 
         public async Task<IList<SonarQubeProject>> GetAllProjectsAsync(string organizationKey, CancellationToken token) =>
-            
-            
             await InvokeRequestAsync<IGetProjectsRequest, SonarQubeProject[]>(
                 request =>
                 {
