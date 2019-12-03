@@ -27,10 +27,10 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace SonarQube.Client.Tests.Api
 {
     [TestClass]
-    public class SonarQubeService_GetAllRulesAsync : SonarQubeService_TestBase
+    public class SonarQubeService_ExtensionMethods : SonarQubeService_TestBase
     {
         [TestMethod]
-        public async Task GetRulesAsync_Active_SonarQubeResponse()
+        public async Task GetAllRulesAsync_FetchesActiveAndInactive()
         {
             await ConnectToSonarQube();
 
