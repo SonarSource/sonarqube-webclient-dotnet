@@ -30,9 +30,9 @@ namespace SonarQube.Client.Tests.Api
     public class SonarQubeService_ExtensionMethods : SonarQubeService_TestBase
     {
         [TestMethod]
-        public async Task GetAllRulesAsync_FetchesActiveAndInactive()
+        public void GetAllRulesAsync_FetchesActiveAndInactive_NotAsync()
         {
-            await ConnectToSonarQube();
+            ConnectToSonarQube().Wait();
 
             // One active rule
             SetupRequest("api/rules/search?activation=true&qprofile=quality-profile-1&f=repo%2CinternalKey%2Cparams%2Cactives&p=1&ps=500", @"
@@ -112,14 +112,14 @@ namespace SonarQube.Client.Tests.Api
 ");
 
 
-            var result = await service.GetAllRulesAsync("quality-profile-1", CancellationToken.None);
+            var result = service.GetAllRulesAsync("quality-profile-1", CancellationToken.None).Result;
 
             messageHandler.VerifyAll();
 
             result.Should().HaveCount(2);
             result.Select(r => r.Key).Should().Contain(new[] { "S2225", "S2342" });
             result.Select(r => r.RepositoryKey).Should().Contain(new[] { "csharpsquid", "csharpsquid"});
-            
+
             // Active rules should be returned first
             result.Select(r => r.IsActive).Should().Contain(new[] { true, false });
 
