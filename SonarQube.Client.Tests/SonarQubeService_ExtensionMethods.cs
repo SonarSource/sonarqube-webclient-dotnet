@@ -20,7 +20,6 @@
 
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -30,9 +29,9 @@ namespace SonarQube.Client.Tests
     public class SonarQubeService_ExtensionMethods : SonarQubeService_TestBase
     {
         [TestMethod]
-        public async Task GetAllRulesAsync_FetchesActiveAndInactive()
+        public void GetAllRulesAsync_FetchesActiveAndInactive()
         {
-            await ConnectToSonarQube();
+            ConnectToSonarQube().Wait();
 
             // One active rule
             SetupRequest("api/rules/search?activation=true&qprofile=quality-profile-1&f=repo%2CinternalKey%2Cparams%2Cactives&p=1&ps=500", @"
@@ -112,7 +111,7 @@ namespace SonarQube.Client.Tests
 ");
 
 
-            var result = await service.GetAllRulesAsync("quality-profile-1", CancellationToken.None);
+            var result = service.GetAllRulesAsync("quality-profile-1", CancellationToken.None).Result;
 
             messageHandler.VerifyAll();
 
