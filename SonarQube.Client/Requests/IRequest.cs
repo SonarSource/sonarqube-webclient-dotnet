@@ -39,6 +39,12 @@ namespace SonarQube.Client.Requests
     /// <typeparam name="TResponse">The type of the request result.</typeparam>
     public interface IRequest<TResponse> : IRequest
     {
-        Task<TResponse> InvokeAsync(HttpClient httpClient, CancellationToken token);
+        /// <summary>
+        /// Executes the request and returns the result
+        /// </summary>
+        /// <param name="httpClient">Connection to the server, used to make direct HTTP requests</param>
+        /// <param name="service">The current SonarQubeService. Can be used to request other service invocations.</param>
+        /// <returns></returns>
+        Task<TResponse> InvokeAsync(HttpClient httpClient, ISonarQubeService service, CancellationToken token);
     }
 }

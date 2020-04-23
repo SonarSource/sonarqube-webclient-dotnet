@@ -42,7 +42,7 @@ namespace SonarQube.Client.Requests
         [JsonProperty("ps")]
         public virtual int PageSize { get; set; } = MaximumPageSize;
 
-        public async override Task<TResponseItem[]> InvokeAsync(HttpClient httpClient, CancellationToken token)
+        public async override Task<TResponseItem[]> InvokeAsync(HttpClient httpClient, ISonarQubeService service, CancellationToken token)
         {
             var allResponseItems = new List<TResponseItem>();
 

@@ -49,7 +49,7 @@ namespace SonarQube.Client.Api.V7_20
 
         public ILogger Logger { get; set; }
 
-        public async Task<SonarQubeIssue[]> InvokeAsync(HttpClient httpClient, CancellationToken token)
+        public async Task<SonarQubeIssue[]> InvokeAsync(HttpClient httpClient, ISonarQubeService service, CancellationToken token)
         {
             // Transfer all IGetIssuesRequest properties to the inner request. If more properties are
             // added to IGetIssuesRequest, this block should set them.
@@ -59,17 +59,17 @@ namespace SonarQube.Client.Api.V7_20
 
             ResetInnerRequest();
             innerRequest.Types = "CODE_SMELL";
-            var codeSmells = await innerRequest.InvokeAsync(httpClient, token);
+            var codeSmells = await innerRequest.InvokeAsync(httpClient, service, token);
             WarnForApiLimit(codeSmells);
 
             ResetInnerRequest();
             innerRequest.Types = "BUG";
-            var bugs = await innerRequest.InvokeAsync(httpClient, token);
+            var bugs = await innerRequest.InvokeAsync(httpClient, service, token);
             WarnForApiLimit(bugs);
 
             ResetInnerRequest();
             innerRequest.Types = "VULNERABILITY";
-            var vulnerabilities = await innerRequest.InvokeAsync(httpClient, token);
+            var vulnerabilities = await innerRequest.InvokeAsync(httpClient, service, token);
             WarnForApiLimit(vulnerabilities);
 
             return codeSmells

@@ -19,13 +19,18 @@
  */
 
 using System;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Moq.Protected;
+using SonarQube.Client.Api;
 using SonarQube.Client.Helpers;
+using SonarQube.Client.Logging;
+using SonarQube.Client.Models;
+using SonarQube.Client.Requests;
 
 namespace SonarQube.Client.Tests
 {
@@ -103,6 +108,61 @@ namespace SonarQube.Client.Tests
             service.IsConnected.Should().BeFalse();
             service.SonarQubeVersion.Should().BeNull();
             messageHandler.Protected().Verify("Dispose", Times.Once(), true);
+        }
+
+        [TestMethod]
+        public async Task InvokeRequest_PassesExpectedParameters()
+        {
+            // Arrange
+            var token = new CancellationToken(true);
+            var expectedPlugins = new SonarQubePlugin[] { new SonarQubePlugin("key1", "version1") };
+            DummyGetPluginsRequest.SetInvokeResponse(expectedPlugins);
+
+            // Register a dummy request with a high-enough version to make sure it's
+            // the dummy request that is used
+            requestFactory.RegisterRequest<IGetPluginsRequest, DummyGetPluginsRequest>("999.9.9");
+            await ConnectToSonarQube(version: "999.9.9", "https://myserver");
+
+            // Act
+            var result = await service.GetAllPluginsAsync(token);
+
+            // Assert
+            // Strictly speaking the logger is set on creation not invocation, but
+            // we'll check it anyway
+            DummyGetPluginsRequest.SuppliedLogger.Should().BeSameAs(logger);
+
+            DummyGetPluginsRequest.InvocationCount.Should().Be(1);
+            DummyGetPluginsRequest.SuppliedHttpClient.BaseAddress.AbsoluteUri.Should().Be("https://myserver/");
+            DummyGetPluginsRequest.SuppliedService.Should().BeSameAs(service);
+            DummyGetPluginsRequest.SuppliedCancellationToken.Should().Be(token);
+
+            result.Should().BeSameAs(expectedPlugins);
+        }
+
+        private class DummyGetPluginsRequest : IGetPluginsRequest
+        {
+            // We don't control the creation of instances of this class
+            // so we have to use statics to capture the data from the InvokeAsync calls.
+            public static int InvocationCount { get; private set; }
+            public static ILogger SuppliedLogger { get; private set; }
+            public static HttpClient SuppliedHttpClient { get; private set; }
+            public static ISonarQubeService SuppliedService { get; private set; }
+            public static CancellationToken SuppliedCancellationToken { get; private set; }
+
+            private static SonarQubePlugin[] pluginsToReturn;
+
+            public static void SetInvokeResponse(SonarQubePlugin[] plugins) => pluginsToReturn = plugins;
+
+            ILogger IRequest.Logger { get => throw new NotImplementedException(); set { SuppliedLogger = value; } }
+
+            Task<SonarQubePlugin[]> IRequest<SonarQubePlugin[]>.InvokeAsync(HttpClient httpClient, ISonarQubeService service, CancellationToken token)
+            {
+                InvocationCount++;
+                SuppliedHttpClient = httpClient;
+                SuppliedService = service;
+                SuppliedCancellationToken = token;
+                return Task.FromResult<SonarQubePlugin[]>(pluginsToReturn);
+            }
         }
     }
 }

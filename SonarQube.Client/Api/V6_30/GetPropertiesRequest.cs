@@ -44,7 +44,7 @@ namespace SonarQube.Client.Api.V6_30
                 .SelectMany(ToProperties)
                 .ToArray();
 
-        public override async Task<SonarQubeProperty[]> InvokeAsync(HttpClient httpClient, CancellationToken token)
+        public override async Task<SonarQubeProperty[]> InvokeAsync(HttpClient httpClient, ISonarQubeService service, CancellationToken token)
         {
             var result = await InvokeUncheckedAsync(httpClient, token);
 
