@@ -26,7 +26,10 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SonarQube.Client.Models;
 using SonarQube.Client.RoslynExporterAdapter;
 
-namespace SonarQube.Client.Tests.RsolynExporterAdapter
+// Copied from the SonarScanner for MSBuild.
+// See https://github.com/SonarSource/sonar-scanner-msbuild/blob/9ccfdb648a0411014b29c7aee8e347aeab87ea71/Tests/SonarScanner.MSBuild.PreProcessor.Tests/RoslynRuleSetGeneratorTests.cs#L29
+
+namespace SonarQube.Client.Tests.RoslynExporterAdapter
 {
     [TestClass]
     public class RoslynRuleSetGeneratorTests
