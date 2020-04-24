@@ -87,18 +87,18 @@ namespace SonarQube.Client.Tests.RsolynExporterAdapter
                 ["sonaranalyzer-cs.ruleNamespace"] = "SonarAnalyzer.CSharp",
             });
 
-            var inactiveRules = new List<SonarQubeRule>
+            var activeRules = new List<SonarQubeRule>
             {
                 CreateRule("csharpsquid", "rule1", isActive: true),
                 CreateRule("csharpsquid", "rule2", isActive: true),
             };
 
             // Act
-            var ruleSet = generator.Generate("cs", Enumerable.Empty<SonarQubeRule>(), inactiveRules);
+            var ruleSet = generator.Generate("cs", activeRules, Enumerable.Empty<SonarQubeRule>());
 
             // Assert
             ruleSet.Rules.Should().HaveCount(1);
-            ruleSet.Rules[0].RuleList.Select(r => r.Action).Should().BeEquivalentTo("None", "None");
+            ruleSet.Rules[0].RuleList.Select(r => r.Action).Should().BeEquivalentTo("Warning", "Warning");
         }
 
         [TestMethod]
