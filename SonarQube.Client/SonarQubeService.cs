@@ -113,7 +113,7 @@ namespace SonarQube.Client
             var request = requestFactory.Create<TRequest>(SonarQubeVersion);
             configure(request);
 
-            var result = await request.InvokeAsync(httpClient, token);
+            var result = await request.InvokeAsync(httpClient, this, token);
 
             return result;
         }

@@ -41,7 +41,7 @@ namespace SonarQube.Client.Tests
         protected SonarQubeService service;
         protected TestLogger logger;
 
-        private RequestFactory requestFactory;
+        protected RequestFactory requestFactory;
 
         private const string DefaultBasePath = "http://localhost/";
 

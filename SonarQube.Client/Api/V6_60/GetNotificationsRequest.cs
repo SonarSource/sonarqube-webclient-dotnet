@@ -42,7 +42,7 @@ namespace SonarQube.Client.Api.V6_60
 
         protected override string Path => "api/developers/search_events";
 
-        public async override Task<SonarQubeNotification[]> InvokeAsync(HttpClient httpClient, CancellationToken token)
+        public async override Task<SonarQubeNotification[]> InvokeAsync(HttpClient httpClient, ISonarQubeService service, CancellationToken token)
         {
             var result = await InvokeUncheckedAsync(httpClient, token);
 

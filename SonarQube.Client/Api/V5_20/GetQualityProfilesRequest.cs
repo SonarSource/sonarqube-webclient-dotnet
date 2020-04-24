@@ -44,7 +44,7 @@ namespace SonarQube.Client.Api.V5_20
 
         protected override string Path => "api/qualityprofiles/search";
 
-        public override async Task<SonarQubeQualityProfile[]> InvokeAsync(HttpClient httpClient, CancellationToken token)
+        public override async Task<SonarQubeQualityProfile[]> InvokeAsync(HttpClient httpClient, ISonarQubeService service, CancellationToken token)
         {
             var result = await InvokeUncheckedAsync(httpClient, token);
 

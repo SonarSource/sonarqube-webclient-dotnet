@@ -63,7 +63,7 @@ namespace SonarQube.Client.Requests
         /// <param name="httpClient">HttpClient instance to be used to invoke the request.</param>
         /// <param name="token">CancellationToken instance to be used to cancel the execution of the request.</param>
         /// <returns>Class instance that represents the request response.</returns>
-        public virtual async Task<TResponse> InvokeAsync(HttpClient httpClient, CancellationToken token)
+        public virtual async Task<TResponse> InvokeAsync(HttpClient httpClient, ISonarQubeService service, CancellationToken token)
         {
             var result = await InvokeUncheckedAsync(httpClient, token);
 

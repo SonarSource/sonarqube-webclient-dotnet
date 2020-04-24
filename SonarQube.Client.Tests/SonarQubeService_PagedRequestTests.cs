@@ -41,6 +41,7 @@ namespace SonarQube.Client.Tests
         private Mock<HttpMessageHandler> messageHandler;
         private TestLogger logger;
         private HttpClient client;
+        private ISonarQubeService mockService;
 
         [TestInitialize]
         public void TestInitialize()
@@ -51,6 +52,7 @@ namespace SonarQube.Client.Tests
                 BaseAddress = BasePath
             };
             logger = new TestLogger();
+            mockService = new Mock<ISonarQubeService>().Object;
         }
 
         [TestMethod]
@@ -78,7 +80,7 @@ namespace SonarQube.Client.Tests
     }
   ]
 }");
-            var result = await request.InvokeAsync(client, CancellationToken.None);
+            var result = await request.InvokeAsync(client, mockService, CancellationToken.None);
             result.Should().HaveCount(2);
         }
 
@@ -144,7 +146,7 @@ namespace SonarQube.Client.Tests
   ]
 }}");
 
-            var result = await request.InvokeAsync(client, CancellationToken.None);
+            var result = await request.InvokeAsync(client, mockService, CancellationToken.None);
 
             // Should stop after two pages of data
             result.Should().HaveCount(10);

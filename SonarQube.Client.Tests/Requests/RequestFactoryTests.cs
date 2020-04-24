@@ -21,8 +21,8 @@
 using System;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using SonarQube.Client.Requests;
 using SonarQube.Client.Logging;
+using SonarQube.Client.Requests;
 
 namespace SonarQube.Client.Tests.Services
 {
