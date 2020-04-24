@@ -313,6 +313,25 @@ namespace SonarQube.Client.Tests.RoslynExporterAdapter
                     "Property does not exist: sonaranalyzer-cs.analyzerId. This property should be set by the plugin in SonarQube.");
         }
 
+
+        [TestMethod]
+        [DataRow(RuleAction.Info, "Info")]
+        [DataRow(RuleAction.Warning, "Warning")]
+        [DataRow(RuleAction.None, "None")]
+        [DataRow(RuleAction.Error, "Error")]
+        [DataRow(RuleAction.Hidden, "Hidden")]
+        public void GetActionText_Valid(RuleAction action, string expected)
+        {
+            RoslynRuleSetGenerator.GetActionText(action).Should().Be(expected);
+        }
+
+        [TestMethod]
+        public void GetActionText_Invalid()
+        {
+            Action act = () =>RoslynRuleSetGenerator.GetActionText((RuleAction)(-1));
+            act.Should().Throw<NotSupportedException>();
+        }
+
         private SonarQubeRule CreateRule(string repoKey, string ruleKey, bool isActive) =>
             new SonarQubeRule(ruleKey, repoKey, isActive, SonarQubeIssueSeverity.Unknown, new Dictionary<string, string>());
     }

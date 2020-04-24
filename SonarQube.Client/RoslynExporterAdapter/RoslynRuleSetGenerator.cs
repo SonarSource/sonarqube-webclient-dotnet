@@ -36,7 +36,7 @@ namespace SonarQube.Client.RoslynExporterAdapter
         private readonly IDictionary<string, string> sonarProperties;
         private readonly string inactiveRuleActionText = GetActionText(RuleAction.None);
 
-        private string activeRuleActionText = GetActionText(RuleAction.Warning);
+        private readonly string activeRuleActionText = GetActionText(RuleAction.Warning);
 
         public RoslynRuleSetGenerator(IDictionary<string, string> sonarProperties)
         {
@@ -102,7 +102,7 @@ namespace SonarQube.Client.RoslynExporterAdapter
         private Rule CreateRuleElement(SonarQubeRule sonarRule) =>
             new Rule(sonarRule.Key, sonarRule.IsActive ? activeRuleActionText : inactiveRuleActionText);
 
-        private static string GetActionText(RuleAction ruleAction)
+        internal /* for testing */ static string GetActionText(RuleAction ruleAction)
         {
             switch (ruleAction)
             {
