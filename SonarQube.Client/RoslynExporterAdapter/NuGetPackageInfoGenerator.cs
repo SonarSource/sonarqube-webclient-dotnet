@@ -47,13 +47,10 @@ namespace SonarQube.Client.RoslynExporterAdapter
             return packages;
         }
 
-        private static IEnumerable<string> GetPluginPropertyPrefixes(IEnumerable<SonarQubeRule> rules)
-        {
-            var partialRepoKeys = new HashSet<string>();
-            partialRepoKeys.UnionWith(rules.Select(r => r.TryGetRoslynPluginPropertyPrefix()));
-            partialRepoKeys.Remove(null);
-
-            return partialRepoKeys;
-        }
+        private static IEnumerable<string> GetPluginPropertyPrefixes(IEnumerable<SonarQubeRule> rules) =>
+            rules.Select(r => r.TryGetRoslynPluginPropertyPrefix())
+                .Distinct()
+                .Where(r => !string.IsNullOrEmpty(r))
+                .ToArray();
     }
 }

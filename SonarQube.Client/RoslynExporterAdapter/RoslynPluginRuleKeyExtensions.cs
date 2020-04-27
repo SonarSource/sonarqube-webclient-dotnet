@@ -51,10 +51,10 @@ namespace SonarQube.Client.RoslynExporterAdapter
             // start with "MyCustomAnalyzer." e.g.
             // * MyCustomAnalyzer.analyzerId
             // * MyCustomAnalyzer.pluginVersion
-            if (rule.RepositoryKey.Length > ROSLYN_REPOSITORY_PREFIX.Length &&
-                rule.RepositoryKey.StartsWith(ROSLYN_REPOSITORY_PREFIX))
+            if (rule.RepositoryKey.StartsWith(ROSLYN_REPOSITORY_PREFIX))
             {
-                return rule.RepositoryKey.Substring(ROSLYN_REPOSITORY_PREFIX.Length);
+                var propertyPrefix = rule.RepositoryKey.Substring(ROSLYN_REPOSITORY_PREFIX.Length);
+                return string.IsNullOrEmpty(propertyPrefix) ? null : propertyPrefix;
             }
 
             return null; // not a Roslyn-based rule
