@@ -44,9 +44,6 @@ namespace SonarQube.Client.Api.V7_20
     {
         private readonly GetIssuesRequest innerRequest = new GetIssuesRequest();
 
-        private const int MaxNumberOfSupportedIssues = 10000;
-        private const int MaxNumberOfPages = 20; // Retrieve 10000 in 20 pages x 500 items per page
-
         public string ProjectKey { get; set; }
 
         public string Statuses { get; set; }
@@ -60,7 +57,7 @@ namespace SonarQube.Client.Api.V7_20
             innerRequest.ProjectKey = ProjectKey;
             innerRequest.Statuses = Statuses;
             innerRequest.Logger = Logger;
-            innerRequest.MaxPageNumber = MaxNumberOfPages;
+            innerRequest.MaxPageNumber = 20; // Retrieve 10000 in 20 pages x 500 items per page;
 
             ResetInnerRequest();
             innerRequest.Types = "CODE_SMELL";
@@ -85,9 +82,9 @@ namespace SonarQube.Client.Api.V7_20
 
         private void WarnForApiLimit(SonarQubeIssue[] issues)
         {
-            if (issues.Length == MaxNumberOfSupportedIssues)
+            if (issues.Length == 1000)
             {
-                Logger.Warning($"The SonarQube maximum API response limit reached. Some issues might not be suppressed, suppressing the first {MaxNumberOfSupportedIssues} issues.");
+                Logger.Warning($"The SonarQube maximum API response limit reached. Some issues might not be suppressed.");
             }
         }
 
