@@ -45,7 +45,7 @@ namespace SonarQube.Client.Api.V7_20
         private readonly GetIssuesRequest innerRequest = new GetIssuesRequest();
 
         private const int MaxNumberOfSupportedIssues = 10000;
-        private const int MaxNumberOfIssuesPerPage = PagedRequestBase<SonarQubeIssue>.MaximumPageSize;
+        private const int MaxNumberOfPages = 20; // Retrieve 10000 in 20 pages x 500 items per page
 
         public string ProjectKey { get; set; }
 
@@ -60,7 +60,7 @@ namespace SonarQube.Client.Api.V7_20
             innerRequest.ProjectKey = ProjectKey;
             innerRequest.Statuses = Statuses;
             innerRequest.Logger = Logger;
-            innerRequest.MaxPageNumber = MaxNumberOfSupportedIssues / MaxNumberOfIssuesPerPage;
+            innerRequest.MaxPageNumber = MaxNumberOfPages;
 
             ResetInnerRequest();
             innerRequest.Types = "CODE_SMELL";

@@ -34,7 +34,7 @@ namespace SonarQube.Client.Requests
     public abstract class PagedRequestBase<TResponseItem> : RequestBase<TResponseItem[]>, IPagedRequest<TResponseItem>
     {
         private const int FirstPage = 1;
-        public const int MaximumPageSize = 500;
+        private const int MaximumPageSize = 500;
 
         [JsonIgnore]
         public virtual int? MaxPageNumber { get; set; }
