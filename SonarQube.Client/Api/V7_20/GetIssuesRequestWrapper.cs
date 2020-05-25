@@ -82,7 +82,7 @@ namespace SonarQube.Client.Api.V7_20
 
         private void WarnForApiLimit(SonarQubeIssue[] issues)
         {
-            if (issues.Length == 1000)
+            if (issues.Length == 10000)
             {
                 Logger.Warning($"The SonarQube maximum API response limit reached. Some issues might not be suppressed.");
             }
