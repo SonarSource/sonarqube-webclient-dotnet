@@ -34,7 +34,10 @@ namespace SonarQube.Client.Requests
     public abstract class PagedRequestBase<TResponseItem> : RequestBase<TResponseItem[]>, IPagedRequest<TResponseItem>
     {
         private const int FirstPage = 1;
-        private const int MaximumPageSize = 500;
+        public const int MaximumPageSize = 500;
+
+        [JsonIgnore]
+        public virtual int? MaxPageNumber { get; set; }
 
         [JsonProperty("p")]
         public virtual int Page { get; set; } = FirstPage;
@@ -42,7 +45,7 @@ namespace SonarQube.Client.Requests
         [JsonProperty("ps")]
         public virtual int PageSize { get; set; } = MaximumPageSize;
 
-        public async override Task<TResponseItem[]> InvokeAsync(HttpClient httpClient, CancellationToken token)
+        public override async Task<TResponseItem[]> InvokeAsync(HttpClient httpClient, CancellationToken token)
         {
             var allResponseItems = new List<TResponseItem>();
 
@@ -60,13 +63,19 @@ namespace SonarQube.Client.Requests
 
                 Page++;
             }
-            while (pageResult.Value != null &&
+            while (!ReachedMaxPageNumber() &&
+                pageResult.Value != null &&
                 // Continue paging until we get a partial page of results i.e. fewer than requested.
                 // NB there is a bug here: should be comparing against the request page size, not the
                 // maximum allowed size. See https://github.com/SonarSource/sonarqube-webclient-dotnet/issues/8
                 pageResult.Value.Length >= MaximumPageSize);
 
             return allResponseItems.ToArray();
+        }
+
+        private bool ReachedMaxPageNumber()
+        {
+            return MaxPageNumber.HasValue && Page > MaxPageNumber.Value;
         }
 
         protected virtual void ValidateResult(Result<TResponseItem[]> pageResult, List<TResponseItem> allResponseItems) =>

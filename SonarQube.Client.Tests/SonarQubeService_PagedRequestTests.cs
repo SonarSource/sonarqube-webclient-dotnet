@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.Data;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -51,6 +52,65 @@ namespace SonarQube.Client.Tests
                 BaseAddress = BasePath
             };
             logger = new TestLogger();
+        }
+
+        [TestMethod]
+        [DataRow(true)]
+        [DataRow(false)]
+        public async Task MaxPageNumber_RetrievesTheSpecifiedNumberOfPages(bool shouldLimit)
+        {
+            var request = new DummyPagedRequest
+            {
+                Logger = logger,
+                MaxPageNumber = shouldLimit ? 2 : (int?) null
+            };
+
+            SetupRequest("api/dummy?p=1&ps=500", $@"
+{{
+  ""paging"": {{
+    ""pageIndex"": 1,
+    ""pageSize"": 4,
+    ""total"": 1000
+  }},
+  ""dummyResponses"": [
+    {string.Join(",\n", Enumerable.Range(1, 500).Select(i => $@"{{ ""key"": ""{i}"", ""name"": ""Name{i}"" }}"))}
+  ]
+}}");
+
+            SetupRequest("api/dummy?p=2&ps=500", $@"
+{{
+  ""paging"": {{
+    ""pageIndex"": 2,
+    ""pageSize"": 4,
+    ""total"": 1000
+  }},
+  ""dummyResponses"": [
+    {string.Join(",\n", Enumerable.Range(500, 500).Select(i => $@"{{ ""key"": ""{i}"", ""name"": ""Name{i}"" }}"))}
+  ]
+}}");
+
+            SetupRequest("api/dummy?p=3&ps=500", $@"
+{{
+  ""paging"": {{
+    ""pageIndex"": 3,
+    ""pageSize"": 4,
+    ""total"": 1000
+  }},
+  ""dummyResponses"": [
+    {string.Join(",\n", Enumerable.Range(1000, 100).Select(i => $@"{{ ""key"": ""{i}"", ""name"": ""Name{i}"" }}"))}
+  ]
+}}");
+
+            const int numberOfItemsInFirstPage = 500;
+            const int numberOfItemsInSecondPage = 500;
+            const int numberOfItemsInThirdPage = 100;
+
+            var expectedCount = numberOfItemsInFirstPage +
+                                numberOfItemsInSecondPage +
+                                (shouldLimit ? 0 : numberOfItemsInThirdPage);
+
+            var result = await request.InvokeAsync(client, CancellationToken.None);
+            result.Should().HaveCount(expectedCount);
         }
 
         [TestMethod]
