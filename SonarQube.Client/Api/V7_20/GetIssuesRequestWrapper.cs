@@ -60,22 +60,22 @@ namespace SonarQube.Client.Api.V7_20
             innerRequest.ProjectKey = ProjectKey;
             innerRequest.Statuses = Statuses;
             innerRequest.Logger = Logger;
-            innerRequest.MaxPageNumber = MaxNumberOfSupportedIssues / MaxNumberOfIssuesPerPage + 1;
+            innerRequest.MaxPageNumber = MaxNumberOfSupportedIssues / MaxNumberOfIssuesPerPage;
 
             ResetInnerRequest();
             innerRequest.Types = "CODE_SMELL";
             var codeSmells = await innerRequest.InvokeAsync(httpClient, token);
-            WarnForApiLimit(codeSmells, innerRequest);
+            WarnForApiLimit(codeSmells);
 
             ResetInnerRequest();
             innerRequest.Types = "BUG";
             var bugs = await innerRequest.InvokeAsync(httpClient, token);
-            WarnForApiLimit(bugs, innerRequest);
+            WarnForApiLimit(bugs);
 
             ResetInnerRequest();
             innerRequest.Types = "VULNERABILITY";
             var vulnerabilities = await innerRequest.InvokeAsync(httpClient, token);
-            WarnForApiLimit(vulnerabilities, innerRequest);
+            WarnForApiLimit(vulnerabilities);
 
             return codeSmells
                 .Concat(bugs)
@@ -83,11 +83,11 @@ namespace SonarQube.Client.Api.V7_20
                 .ToArray();
         }
 
-        private void WarnForApiLimit(SonarQubeIssue[] issues, GetIssuesRequest request)
+        private void WarnForApiLimit(SonarQubeIssue[] issues)
         {
-            if (issues.Length == MaxNumberOfSupportedIssues || request.Page == request.MaxPageNumber)
+            if (issues.Length == MaxNumberOfSupportedIssues)
             {
-                Logger.Warning($"The SonarQube maximum API response limit reached. Some issues might not be suppressed.");
+                Logger.Warning($"The SonarQube maximum API response limit reached. Some issues might not be suppressed, suppressing the first {MaxNumberOfSupportedIssues} issues.");
             }
         }
 
