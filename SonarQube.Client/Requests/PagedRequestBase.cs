@@ -18,7 +18,6 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -65,24 +64,19 @@ namespace SonarQube.Client.Requests
 
                 Page++;
             }
-            while (!ReachedMaxPageNumber() &&
-                pageResult.Value != null &&
-                pageResult.Value.Length >= PageSize);
+            while (allResponseItems.Count < ItemsLimit &&
+                   pageResult.Value != null &&
+                   pageResult.Value.Length >= PageSize);
 
-            return allResponseItems.Take(ItemsLimit).ToArray();
-        }
-
-        private bool ReachedMaxPageNumber()
-        {
-            var maxPageNumber = (int)Math.Ceiling(a: ItemsLimit / (double)PageSize);
-            var reachedMaxPage = Page > maxPageNumber;
-
-            if (reachedMaxPage)
+            if (allResponseItems.Count < ItemsLimit)
             {
-                Logger.Warning("The SonarQube maximum API response limit reached");
+                return allResponseItems.ToArray();
             }
 
-            return reachedMaxPage;
+            Logger.Warning("Sonar web maximum API response limit reached.");
+
+            return allResponseItems.Take(ItemsLimit).ToArray();
+
         }
 
         protected virtual void ValidateResult(Result<TResponseItem[]> pageResult, List<TResponseItem> allResponseItems) =>

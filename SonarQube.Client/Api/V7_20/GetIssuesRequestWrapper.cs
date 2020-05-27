@@ -59,17 +59,17 @@ namespace SonarQube.Client.Api.V7_20
             ResetInnerRequest();
             innerRequest.Types = "CODE_SMELL";
             var codeSmells = await innerRequest.InvokeAsync(httpClient, token);
-            WarnForApiLimit(codeSmells, innerRequest);
+            WarnForApiLimit(codeSmells, innerRequest, "code smells");
 
             ResetInnerRequest();
             innerRequest.Types = "BUG";
             var bugs = await innerRequest.InvokeAsync(httpClient, token);
-            WarnForApiLimit(bugs, innerRequest);
+            WarnForApiLimit(bugs, innerRequest, "bugs");
 
             ResetInnerRequest();
             innerRequest.Types = "VULNERABILITY";
             var vulnerabilities = await innerRequest.InvokeAsync(httpClient, token);
-            WarnForApiLimit(vulnerabilities, innerRequest);
+            WarnForApiLimit(vulnerabilities, innerRequest, "vulnerabilities");
 
             return codeSmells
                 .Concat(bugs)
@@ -77,11 +77,11 @@ namespace SonarQube.Client.Api.V7_20
                 .ToArray();
         }
 
-        private void WarnForApiLimit(SonarQubeIssue[] issues, GetIssuesRequest request)
+        private void WarnForApiLimit(SonarQubeIssue[] issues, GetIssuesRequest request, string friendlyIssueType)
         {
             if (issues.Length == request.ItemsLimit)
             {
-                Logger.Warning($"The SonarQube maximum API response limit reached. Some issues might not be suppressed, suppressing the first {request.ItemsLimit} issues.");
+                Logger.Warning($"Sonar web API response limit reached ({request.ItemsLimit} items). Some {friendlyIssueType} might not be suppressed.");
             }
         }
 
