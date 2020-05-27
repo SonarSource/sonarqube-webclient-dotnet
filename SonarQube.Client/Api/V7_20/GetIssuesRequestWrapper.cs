@@ -81,7 +81,7 @@ namespace SonarQube.Client.Api.V7_20
         {
             if (issues.Length == request.ItemsLimit)
             {
-                Logger.Warning($"The SonarQube maximum API response limit reached. Some issues might not be suppressed, suppressing {request.ItemsLimit} issues.");
+                Logger.Warning($"The SonarQube maximum API response limit reached. Some issues might not be suppressed, suppressing the first {request.ItemsLimit} issues.");
             }
         }
 
