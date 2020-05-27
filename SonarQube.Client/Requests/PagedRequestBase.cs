@@ -18,7 +18,9 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -35,9 +37,9 @@ namespace SonarQube.Client.Requests
     {
         private const int FirstPage = 1;
         public const int MaximumPageSize = 500;
+        public const int MaximumItemsCount = 10000;
 
-        [JsonIgnore]
-        public virtual int? MaxPageNumber { get; set; }
+        [JsonIgnore] public virtual int ItemsLimit { get; set; } = MaximumItemsCount;
 
         [JsonProperty("p")]
         public virtual int Page { get; set; } = FirstPage;
@@ -65,17 +67,22 @@ namespace SonarQube.Client.Requests
             }
             while (!ReachedMaxPageNumber() &&
                 pageResult.Value != null &&
-                // Continue paging until we get a partial page of results i.e. fewer than requested.
-                // NB there is a bug here: should be comparing against the request page size, not the
-                // maximum allowed size. See https://github.com/SonarSource/sonarqube-webclient-dotnet/issues/8
-                pageResult.Value.Length >= MaximumPageSize);
+                pageResult.Value.Length >= PageSize);
 
-            return allResponseItems.ToArray();
+            return allResponseItems.Take(ItemsLimit).ToArray();
         }
 
         private bool ReachedMaxPageNumber()
         {
-            return MaxPageNumber.HasValue && Page > MaxPageNumber.Value;
+            var maxPageNumber = (int)Math.Ceiling(a: ItemsLimit / (double)PageSize);
+            var reachedMaxPage = Page > maxPageNumber;
+
+            if (reachedMaxPage)
+            {
+                Logger.Warning("The SonarQube maximum API response limit reached");
+            }
+
+            return reachedMaxPage;
         }
 
         protected virtual void ValidateResult(Result<TResponseItem[]> pageResult, List<TResponseItem> allResponseItems) =>

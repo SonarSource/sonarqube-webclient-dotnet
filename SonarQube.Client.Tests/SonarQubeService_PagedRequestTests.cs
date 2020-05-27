@@ -19,7 +19,6 @@
  */
 
 using System;
-using System.Data;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -57,13 +56,17 @@ namespace SonarQube.Client.Tests
         [TestMethod]
         [DataRow(true)]
         [DataRow(false)]
-        public async Task MaxPageNumber_RetrievesTheSpecifiedNumberOfPages(bool shouldLimit)
+        public async Task MaxItemCount_RetrievesTheSpecifiedNumberOfPages(bool shouldLimit)
         {
             var request = new DummyPagedRequest
             {
                 Logger = logger,
-                MaxPageNumber = shouldLimit ? 2 : (int?) null
             };
+
+            if (shouldLimit)
+            {
+                request.ItemsLimit = 1100;
+            }
 
             SetupRequest("api/dummy?p=1&ps=500", $@"
 {{
@@ -97,17 +100,23 @@ namespace SonarQube.Client.Tests
     ""total"": 1000
   }},
   ""dummyResponses"": [
-    {string.Join(",\n", Enumerable.Range(1000, 100).Select(i => $@"{{ ""key"": ""{i}"", ""name"": ""Name{i}"" }}"))}
+    {string.Join(",\n", Enumerable.Range(1000, 500).Select(i => $@"{{ ""key"": ""{i}"", ""name"": ""Name{i}"" }}"))}
   ]
 }}");
 
-            const int numberOfItemsInFirstPage = 500;
-            const int numberOfItemsInSecondPage = 500;
-            const int numberOfItemsInThirdPage = 100;
+            SetupRequest("api/dummy?p=4&ps=500", $@"
+{{
+  ""paging"": {{
+    ""pageIndex"": 3,
+    ""pageSize"": 4,
+    ""total"": 1000
+  }},
+  ""dummyResponses"": [
+    {string.Join(",\n", Enumerable.Range(1500, 100).Select(i => $@"{{ ""key"": ""{i}"", ""name"": ""Name{i}"" }}"))}
+  ]
+}}");
 
-            var expectedCount = numberOfItemsInFirstPage +
-                                numberOfItemsInSecondPage +
-                                (shouldLimit ? 0 : numberOfItemsInThirdPage);
+            var expectedCount = shouldLimit ? 1100 : 1600;
 
             var result = await request.InvokeAsync(client, CancellationToken.None);
             result.Should().HaveCount(expectedCount);
@@ -143,7 +152,6 @@ namespace SonarQube.Client.Tests
         }
 
         [TestMethod]
-        [Ignore] // See bug https://github.com/SonarSource/sonarqube-webclient-dotnet/issues/8
         public async Task RequestPageSize_IsRespected()
         {
             var request = new DummyPagedRequest
