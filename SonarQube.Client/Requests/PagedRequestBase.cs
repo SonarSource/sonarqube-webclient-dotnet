@@ -73,10 +73,12 @@ namespace SonarQube.Client.Requests
                 return allResponseItems.ToArray();
             }
 
-            Logger.Warning("Sonar web maximum API response limit reached.");
+            if (allResponseItems.Count == MaximumItemsCount)
+            {
+                Logger.Warning("Sonar web maximum API response limit reached.");
+            }
 
             return allResponseItems.Take(ItemsLimit).ToArray();
-
         }
 
         protected virtual void ValidateResult(Result<TResponseItem[]> pageResult, List<TResponseItem> allResponseItems) =>
