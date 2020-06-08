@@ -19,6 +19,7 @@
  */
 
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -48,6 +49,9 @@ namespace SonarQube.Client.Requests
 
         public override async Task<TResponseItem[]> InvokeAsync(HttpClient httpClient, CancellationToken token)
         {
+            Debug.Assert(ItemsLimit > 0 && ItemsLimit <= MaximumItemsCount,
+                $"Invalid ItemsLimit: {ItemsLimit}. Expecting a value in the range [1, {MaximumItemsCount}]");
+
             var allResponseItems = new List<TResponseItem>();
 
             Result<TResponseItem[]> pageResult;
