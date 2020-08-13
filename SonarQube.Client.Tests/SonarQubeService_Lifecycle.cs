@@ -87,7 +87,6 @@ namespace SonarQube.Client.Tests
             // Assert
             service.IsConnected.Should().BeFalse();
             service.SonarQubeVersion.Should().BeNull();
-
             disposed.Should().BeFalse();
         }
 
