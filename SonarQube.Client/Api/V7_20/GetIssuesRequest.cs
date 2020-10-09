@@ -19,6 +19,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -70,7 +71,15 @@ namespace SonarQube.Client.Api.V7_20
 
         private static SonarQubeIssue ToSonarQubeIssue(ServerIssue issue, ILookup<string, string> componentKeyPathLookup) =>
             new SonarQubeIssue(ComputePath(issue, componentKeyPathLookup), issue.Hash, issue.Line, issue.Message, ComputeModuleKey(issue),
-                GetRuleKey(issue.CompositeRuleKey), issue.Status == "RESOLVED");
+                GetRuleKey(issue.CompositeRuleKey), issue.Status == "RESOLVED", ToIssueFlows(issue.Flows));
+        private static List<IssueFlow> ToIssueFlows(ServerIssueFlow[] serverIssueFlows) =>
+            serverIssueFlows?.Select(ToIssueFlow).ToList();
+        private static IssueFlow ToIssueFlow(ServerIssueFlow serverIssueFlow) =>
+            new IssueFlow(serverIssueFlow.Locations?.Select(ToIssueLocation).ToList());
+        private static IssueLocation ToIssueLocation(ServerIssueLocation serverIssue) =>
+            new IssueLocation(serverIssue.Component, ToIssueTextRange(serverIssue.TextRange), serverIssue.Message);
+        private static IssueTextRange ToIssueTextRange(ServerIssueTextRange serverIssueTextRange) =>
+            new IssueTextRange(serverIssueTextRange.StartLine, serverIssueTextRange.EndLine, serverIssueTextRange.StartOffset, serverIssueTextRange.EndOffset);
 
         private static string ComputePath(ServerIssue issue, ILookup<string, string> componentKeyPathLookup) =>
             componentKeyPathLookup[issue.Component].FirstOrDefault() ?? string.Empty;
@@ -98,6 +107,8 @@ namespace SonarQube.Client.Api.V7_20
             public string Message { get; set; }
             [JsonProperty("status")]
             public string Status { get; set; }
+            [JsonProperty("flows")]
+            public ServerIssueFlow[] Flows { get; set; }
         }
 
         private class ServerComponent
@@ -113,6 +124,31 @@ namespace SonarQube.Client.Api.V7_20
             {
                 get { return Qualifier == "FIL"; }
             }
+        }
+        private class ServerIssueFlow
+        {
+            [JsonProperty("locations")]
+            public ServerIssueLocation[] Locations { get; set; }
+        }
+        private class ServerIssueLocation
+        {
+            [JsonProperty("component")]
+            public string Component { get; set; }
+            [JsonProperty("textRange")]
+            public ServerIssueTextRange TextRange { get; set; }
+            [JsonProperty("msg")]
+            public string Message { get; set; }
+        }
+        private class ServerIssueTextRange
+        {
+            [JsonProperty("startLine")]
+            public int StartLine { get; set; }
+            [JsonProperty("endLine")]
+            public int EndLine { get; set; }
+            [JsonProperty("startOffset")]
+            public int StartOffset { get; set; }
+            [JsonProperty("endOffset")]
+            public int EndOffset { get; set; }
         }
     }
 }
