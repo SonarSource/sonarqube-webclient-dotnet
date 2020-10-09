@@ -58,6 +58,8 @@ namespace SonarQube.Client.Api.V7_20
                 .ToArray();
         }
 
+        #region Json -> public read-only class conversion methods
+
         private static ILookup<string, string> GetComponentKeyPathLookup(JObject root)
         {
             var components = root["components"] == null
@@ -72,14 +74,6 @@ namespace SonarQube.Client.Api.V7_20
         private static SonarQubeIssue ToSonarQubeIssue(ServerIssue issue, ILookup<string, string> componentKeyPathLookup) =>
             new SonarQubeIssue(ComputePath(issue, componentKeyPathLookup), issue.Hash, issue.Line, issue.Message, ComputeModuleKey(issue),
                 GetRuleKey(issue.CompositeRuleKey), issue.Status == "RESOLVED", ToIssueFlows(issue.Flows));
-        private static List<IssueFlow> ToIssueFlows(ServerIssueFlow[] serverIssueFlows) =>
-            serverIssueFlows?.Select(ToIssueFlow).ToList();
-        private static IssueFlow ToIssueFlow(ServerIssueFlow serverIssueFlow) =>
-            new IssueFlow(serverIssueFlow.Locations?.Select(ToIssueLocation).ToList());
-        private static IssueLocation ToIssueLocation(ServerIssueLocation serverIssue) =>
-            new IssueLocation(serverIssue.Component, ToIssueTextRange(serverIssue.TextRange), serverIssue.Message);
-        private static IssueTextRange ToIssueTextRange(ServerIssueTextRange serverIssueTextRange) =>
-            new IssueTextRange(serverIssueTextRange.StartLine, serverIssueTextRange.EndLine, serverIssueTextRange.StartOffset, serverIssueTextRange.EndOffset);
 
         private static string ComputePath(ServerIssue issue, ILookup<string, string> componentKeyPathLookup) =>
             componentKeyPathLookup[issue.Component].FirstOrDefault() ?? string.Empty;
@@ -90,6 +84,22 @@ namespace SonarQube.Client.Api.V7_20
         private static string GetRuleKey(string compositeRuleKey) =>
             // ruleKey is "csharpsqid:S1234" or "vbnet:S1234" but we need S1234
             compositeRuleKey.Replace("vbnet:", string.Empty).Replace("csharpsquid:", string.Empty);
+
+        private static List<IssueFlow> ToIssueFlows(ServerIssueFlow[] serverIssueFlows) =>
+            serverIssueFlows?.Select(ToIssueFlow).ToList();
+
+        private static IssueFlow ToIssueFlow(ServerIssueFlow serverIssueFlow) =>
+            new IssueFlow(serverIssueFlow.Locations?.Select(ToIssueLocation).ToList());
+
+        private static IssueLocation ToIssueLocation(ServerIssueLocation serverIssue) =>
+            new IssueLocation(serverIssue.Component, ToIssueTextRange(serverIssue.TextRange), serverIssue.Message);
+
+        private static IssueTextRange ToIssueTextRange(ServerIssueTextRange serverIssueTextRange) =>
+            new IssueTextRange(serverIssueTextRange.StartLine, serverIssueTextRange.EndLine, serverIssueTextRange.StartOffset, serverIssueTextRange.EndOffset);
+
+        #endregion Json -> public read-only class conversion methods
+
+        #region JSON data classes
 
         private class ServerIssue
         {
@@ -125,11 +135,13 @@ namespace SonarQube.Client.Api.V7_20
                 get { return Qualifier == "FIL"; }
             }
         }
+
         private class ServerIssueFlow
         {
             [JsonProperty("locations")]
             public ServerIssueLocation[] Locations { get; set; }
         }
+
         private class ServerIssueLocation
         {
             [JsonProperty("component")]
@@ -139,6 +151,7 @@ namespace SonarQube.Client.Api.V7_20
             [JsonProperty("msg")]
             public string Message { get; set; }
         }
+
         private class ServerIssueTextRange
         {
             [JsonProperty("startLine")]
@@ -150,5 +163,7 @@ namespace SonarQube.Client.Api.V7_20
             [JsonProperty("endOffset")]
             public int EndOffset { get; set; }
         }
+
+        #endregion // JSON data classes
     }
 }
