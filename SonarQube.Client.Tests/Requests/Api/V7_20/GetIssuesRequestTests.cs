@@ -35,7 +35,7 @@ namespace SonarQube.Client.Tests.Requests.Api.V7_20
     public class GetIssuesRequestTests
     {
         [TestMethod]
-        public async Task Invoke()
+        public async Task InvokeAsync_ResponseWithFlows_IsDeserializedCorrectly()
         {
             const string projectKey = "myproject";
             const string statusesToRequest = "some status";
