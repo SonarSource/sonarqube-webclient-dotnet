@@ -39,7 +39,7 @@ namespace SonarQube.Client.Tests.Requests.Api.V7_20
         {
             const string projectKey = "myproject";
             const string statusesToRequest = "some status";
-            const string escapedStatusesInRequest = "some+status";
+            const string expectedEscapedStatusesInRequest = "some+status";
 
             var testSubject = CreateTestSubject(projectKey, statusesToRequest);
 
@@ -49,7 +49,7 @@ namespace SonarQube.Client.Tests.Requests.Api.V7_20
                 BaseAddress = new Uri(ValidBaseAddress)
             };
 
-            var request = $"api/issues/search?projects={projectKey}&statuses={escapedStatusesInRequest}&p=1&ps=500";
+            var request = $"api/issues/search?projects={projectKey}&statuses={expectedEscapedStatusesInRequest}&p=1&ps=500";
             const string response = @"
 {
   ""total"": 1,

@@ -58,7 +58,7 @@ namespace SonarQube.Client.Api.V7_20
                 .ToArray();
         }
 
-        #region Json -> public read-only class conversion methods
+        #region Json data classes -> public read-only class conversion methods
 
         private static ILookup<string, string> GetComponentKeyPathLookup(JObject root)
         {
@@ -97,7 +97,7 @@ namespace SonarQube.Client.Api.V7_20
         private static IssueTextRange ToIssueTextRange(ServerIssueTextRange serverIssueTextRange) =>
             new IssueTextRange(serverIssueTextRange.StartLine, serverIssueTextRange.EndLine, serverIssueTextRange.StartOffset, serverIssueTextRange.EndOffset);
 
-        #endregion Json -> public read-only class conversion methods
+        #endregion Json data classes -> public read-only class conversion methods
 
         #region JSON data classes
 

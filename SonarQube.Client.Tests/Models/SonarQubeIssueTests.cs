@@ -49,7 +49,7 @@ namespace SonarQube.Client.Tests.Models
         {
             var testSubject = new SonarQubeIssue("any", "any", 1, "any", "any", "any", false, null);
 
-            testSubject.Flows.Should().NotBeNull();
+            testSubject.Flows.Should().BeEmpty();
         }
     }
 }
