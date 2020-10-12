@@ -18,6 +18,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+using System.Collections.Generic;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SonarQube.Client.Models;
@@ -32,7 +33,21 @@ namespace SonarQube.Client.Tests.Models
         {
             var testSubject = new IssueFlow(null);
 
-            testSubject.Locations.Should().NotBeNull();
+            testSubject.Locations.Should().BeEmpty();
+        }
+
+        [TestMethod]
+        public void Ctor_PropertiesAreSet()
+        {
+            var locations = new List<IssueLocation>
+            {
+                new IssueLocation("component1", null, "message1"),
+                new IssueLocation("component2", null, "message2")
+            };
+
+            var testSubject = new IssueFlow(locations);
+
+            testSubject.Locations.Should().BeEquivalentTo(locations[0], locations[1]);
         }
     }
 }

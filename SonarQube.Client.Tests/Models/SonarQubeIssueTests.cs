@@ -51,5 +51,24 @@ namespace SonarQube.Client.Tests.Models
 
             testSubject.Flows.Should().BeEmpty();
         }
+
+        [TestMethod]
+        public void Ctor_PropertiesAreSet()
+        {
+            var flows = new List<IssueFlow>
+            {
+                new IssueFlow(null), new IssueFlow(null)
+            };
+            var testSubject = new SonarQubeIssue("file", "hash", 123, "message", "module", "rule", true, flows);
+
+            testSubject.FilePath.Should().Be("file");
+            testSubject.Hash.Should().Be("hash");
+            testSubject.Line.Should().Be(123);
+            testSubject.Message.Should().Be("message");
+            testSubject.ModuleKey.Should().Be("module");
+            testSubject.RuleId.Should().Be("rule");
+            testSubject.IsResolved.Should().BeTrue();
+            testSubject.Flows.Should().BeEquivalentTo(flows);
+        }
     }
 }

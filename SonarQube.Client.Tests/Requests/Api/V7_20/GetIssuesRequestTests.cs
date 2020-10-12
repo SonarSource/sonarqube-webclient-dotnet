@@ -194,30 +194,32 @@ namespace SonarQube.Client.Tests.Requests.Api.V7_20
 
             SetupHttpRequest(handlerMock, request, response);
 
-            var result = await testSubject.InvokeAsync(httpClient, CancellationToken.None);
-            result.Should().HaveCount(1);
+            var results = await testSubject.InvokeAsync(httpClient, CancellationToken.None);
+            results.Should().HaveCount(1);
 
-            result[0].RuleId.Should().Be("roslyn.sonaranalyzer.security.cs:S5146");
-            result[0].Flows.Count().Should().Be(2);
+            var result = results[0];
 
-            result[0].Flows[0].Locations.Count().Should().Be(3);
-            result[0].Flows[1].Locations.Count().Should().Be(2);
+            result.RuleId.Should().Be("roslyn.sonaranalyzer.security.cs:S5146");
+            result.Flows.Count().Should().Be(2);
 
-            var location_0_0_0 = result[0].Flows[0].Locations[0];
-            location_0_0_0.Component.Should().Be("myprojectkey:projectroot/Controllers/WeatherForecastController.cs");
-            location_0_0_0.Message.Should().Be("sink: tainted value is used to perform a security-sensitive operation");
-            location_0_0_0.TextRange.StartLine.Should().Be(43);
-            location_0_0_0.TextRange.EndLine.Should().Be(43);
-            location_0_0_0.TextRange.StartOffset.Should().Be(19);
-            location_0_0_0.TextRange.EndOffset.Should().Be(43);
+            result.Flows[0].Locations.Count().Should().Be(3);
+            result.Flows[1].Locations.Count().Should().Be(2);
 
-            var location_0_1_1 = result[0].Flows[1].Locations[1];
-            location_0_1_1.Component.Should().Be("myprojectkey:projectroot/Controllers/Helper.cs");
-            location_0_1_1.Message.Should().Be("tainted value is propagated");
-            location_0_1_1.TextRange.StartLine.Should().Be(5);
-            location_0_1_1.TextRange.EndLine.Should().Be(5);
-            location_0_1_1.TextRange.StartOffset.Should().Be(29);
-            location_0_1_1.TextRange.EndOffset.Should().Be(41);
+            var firstFlowFirstLocation = results[0].Flows[0].Locations[0];
+            firstFlowFirstLocation.Component.Should().Be("myprojectkey:projectroot/Controllers/WeatherForecastController.cs");
+            firstFlowFirstLocation.Message.Should().Be("sink: tainted value is used to perform a security-sensitive operation");
+            firstFlowFirstLocation.TextRange.StartLine.Should().Be(43);
+            firstFlowFirstLocation.TextRange.EndLine.Should().Be(43);
+            firstFlowFirstLocation.TextRange.StartOffset.Should().Be(19);
+            firstFlowFirstLocation.TextRange.EndOffset.Should().Be(43);
+
+            var seconFlowSecondLocation = results[0].Flows[1].Locations[1];
+            seconFlowSecondLocation.Component.Should().Be("myprojectkey:projectroot/Controllers/Helper.cs");
+            seconFlowSecondLocation.Message.Should().Be("tainted value is propagated");
+            seconFlowSecondLocation.TextRange.StartLine.Should().Be(5);
+            seconFlowSecondLocation.TextRange.EndLine.Should().Be(5);
+            seconFlowSecondLocation.TextRange.StartOffset.Should().Be(29);
+            seconFlowSecondLocation.TextRange.EndOffset.Should().Be(41);
         }
 
         private static GetIssuesRequest CreateTestSubject(string projectKey, string statusesToRequest)
