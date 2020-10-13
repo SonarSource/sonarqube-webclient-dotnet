@@ -72,11 +72,11 @@ namespace SonarQube.Client.Api.V7_20
         }
 
         private static SonarQubeIssue ToSonarQubeIssue(ServerIssue issue, ILookup<string, string> componentKeyPathLookup) =>
-            new SonarQubeIssue(ComputePath(issue, componentKeyPathLookup), issue.Hash, issue.Line, issue.Message, ComputeModuleKey(issue),
-                GetRuleKey(issue.CompositeRuleKey), issue.Status == "RESOLVED", ToIssueFlows(issue.Flows));
+            new SonarQubeIssue(ComputePath(issue.Component, componentKeyPathLookup), issue.Hash, issue.Line, issue.Message, ComputeModuleKey(issue),
+                GetRuleKey(issue.CompositeRuleKey), issue.Status == "RESOLVED", ToIssueFlows(issue.Flows, componentKeyPathLookup));
 
-        private static string ComputePath(ServerIssue issue, ILookup<string, string> componentKeyPathLookup) =>
-            componentKeyPathLookup[issue.Component].FirstOrDefault() ?? string.Empty;
+        private static string ComputePath(string component, ILookup<string, string> componentKeyPathLookup) =>
+            componentKeyPathLookup[component].FirstOrDefault() ?? string.Empty;
 
         private static string ComputeModuleKey(ServerIssue issue) =>
             issue.SubProject ?? issue.Component;
@@ -85,14 +85,14 @@ namespace SonarQube.Client.Api.V7_20
             // ruleKey is "csharpsqid:S1234" or "vbnet:S1234" but we need S1234
             compositeRuleKey.Replace("vbnet:", string.Empty).Replace("csharpsquid:", string.Empty);
 
-        private static List<IssueFlow> ToIssueFlows(ServerIssueFlow[] serverIssueFlows) =>
-            serverIssueFlows?.Select(ToIssueFlow).ToList();
+        private static List<IssueFlow> ToIssueFlows(ServerIssueFlow[] serverIssueFlows, ILookup<string, string> componentKeyPathLookup) =>
+            serverIssueFlows?.Select(x => ToIssueFlow(x, componentKeyPathLookup)).ToList();
 
-        private static IssueFlow ToIssueFlow(ServerIssueFlow serverIssueFlow) =>
-            new IssueFlow(serverIssueFlow.Locations?.Select(ToIssueLocation).ToList());
+        private static IssueFlow ToIssueFlow(ServerIssueFlow serverIssueFlow, ILookup<string, string> componentKeyPathLookup) =>
+            new IssueFlow(serverIssueFlow.Locations?.Select(x => ToIssueLocation(x, componentKeyPathLookup)).ToList());
 
-        private static IssueLocation ToIssueLocation(ServerIssueLocation serverIssue) =>
-            new IssueLocation(serverIssue.Component, ToIssueTextRange(serverIssue.TextRange), serverIssue.Message);
+        private static IssueLocation ToIssueLocation(ServerIssueLocation serverIssueLocation, ILookup<string, string> componentKeyPathLookup) =>
+            new IssueLocation(ComputePath(serverIssueLocation.Component, componentKeyPathLookup), serverIssueLocation.Component, ToIssueTextRange(serverIssueLocation.TextRange), serverIssueLocation.Message);
 
         private static IssueTextRange ToIssueTextRange(ServerIssueTextRange serverIssueTextRange) =>
             new IssueTextRange(serverIssueTextRange.StartLine, serverIssueTextRange.EndLine, serverIssueTextRange.StartOffset, serverIssueTextRange.EndOffset);
