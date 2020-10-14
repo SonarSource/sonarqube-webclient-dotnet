@@ -47,18 +47,24 @@ namespace SonarQube.Client.Api.V7_20
         {
             var root = JObject.Parse(response);
 
-            // Lookup component key -> path for files. Each response contains normalized data, containing
-            // issues and components, where each issue's "component" property points to a component with
-            // the same "key". We obtain the FilePath of each issue from its corresponding component.
-            var componentKeyPathLookup = GetComponentKeyPathLookup(root);
+            componentKeyPathLookup = GetComponentKeyPathLookup(root);
 
             return root["issues"]
                 .ToObject<ServerIssue[]>()
-                .Select(issue => ToSonarQubeIssue(issue, componentKeyPathLookup))
+                .Select(issue => ToSonarQubeIssue(issue))
                 .ToArray();
         }
 
         #region Json data classes -> public read-only class conversion methods
+
+        /// <summary>
+        /// Lookup component key -> path for files. Each response contains normalized data, containing
+        /// issues and components, where each issue's "component" property points to a component with
+        /// the same "key". We obtain the FilePath of each issue from its corresponding component.
+        /// </summary>
+        /// <remarks>A new instance of this class is created for each request so it is safe to store the
+        /// lookup in an instance variable so we don't have to pass it around.</remarks>
+        private ILookup<string, string> componentKeyPathLookup;
 
         private static ILookup<string, string> GetComponentKeyPathLookup(JObject root)
         {
@@ -71,11 +77,11 @@ namespace SonarQube.Client.Api.V7_20
                 .ToLookup(c => c.Key, c => c.Path); // Using a Lookup because it does not throw, unlike the Dictionary
         }
 
-        private static SonarQubeIssue ToSonarQubeIssue(ServerIssue issue, ILookup<string, string> componentKeyPathLookup) =>
-            new SonarQubeIssue(ComputePath(issue.Component, componentKeyPathLookup), issue.Hash, issue.Line, issue.Message, ComputeModuleKey(issue),
-                GetRuleKey(issue.CompositeRuleKey), issue.Status == "RESOLVED", ToIssueFlows(issue.Flows, componentKeyPathLookup));
+        private SonarQubeIssue ToSonarQubeIssue(ServerIssue issue) =>
+            new SonarQubeIssue(ComputePath(issue.Component), issue.Hash, issue.Line, issue.Message, ComputeModuleKey(issue),
+                GetRuleKey(issue.CompositeRuleKey), issue.Status == "RESOLVED", ToIssueFlows(issue.Flows));
 
-        private static string ComputePath(string component, ILookup<string, string> componentKeyPathLookup) =>
+        private string ComputePath(string component) =>
             componentKeyPathLookup[component].FirstOrDefault() ?? string.Empty;
 
         private static string ComputeModuleKey(ServerIssue issue) =>
@@ -85,14 +91,14 @@ namespace SonarQube.Client.Api.V7_20
             // ruleKey is "csharpsqid:S1234" or "vbnet:S1234" but we need S1234
             compositeRuleKey.Replace("vbnet:", string.Empty).Replace("csharpsquid:", string.Empty);
 
-        private static List<IssueFlow> ToIssueFlows(ServerIssueFlow[] serverIssueFlows, ILookup<string, string> componentKeyPathLookup) =>
-            serverIssueFlows?.Select(x => ToIssueFlow(x, componentKeyPathLookup)).ToList();
+        private List<IssueFlow> ToIssueFlows(ServerIssueFlow[] serverIssueFlows) =>
+            serverIssueFlows?.Select(ToIssueFlow).ToList();
 
-        private static IssueFlow ToIssueFlow(ServerIssueFlow serverIssueFlow, ILookup<string, string> componentKeyPathLookup) =>
-            new IssueFlow(serverIssueFlow.Locations?.Select(x => ToIssueLocation(x, componentKeyPathLookup)).ToList());
+        private IssueFlow ToIssueFlow(ServerIssueFlow serverIssueFlow) =>
+            new IssueFlow(serverIssueFlow.Locations?.Select(ToIssueLocation).ToList());
 
-        private static IssueLocation ToIssueLocation(ServerIssueLocation serverIssueLocation, ILookup<string, string> componentKeyPathLookup) =>
-            new IssueLocation(ComputePath(serverIssueLocation.Component, componentKeyPathLookup), serverIssueLocation.Component, ToIssueTextRange(serverIssueLocation.TextRange), serverIssueLocation.Message);
+        private IssueLocation ToIssueLocation(ServerIssueLocation serverIssueLocation) =>
+            new IssueLocation(ComputePath(serverIssueLocation.Component), serverIssueLocation.Component, ToIssueTextRange(serverIssueLocation.TextRange), serverIssueLocation.Message);
 
         private static IssueTextRange ToIssueTextRange(ServerIssueTextRange serverIssueTextRange) =>
             new IssueTextRange(serverIssueTextRange.StartLine, serverIssueTextRange.EndLine, serverIssueTextRange.StartOffset, serverIssueTextRange.EndOffset);
