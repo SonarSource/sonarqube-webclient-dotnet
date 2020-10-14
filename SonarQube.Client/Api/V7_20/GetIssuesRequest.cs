@@ -47,11 +47,14 @@ namespace SonarQube.Client.Api.V7_20
         {
             var root = JObject.Parse(response);
 
+            // This is a paged request so ParseResponse will be called once for each "page"
+            // of the response. However, we expect each page to be self-contained, so we want
+            // to rebuild the lookup each time.
             componentKeyPathLookup = GetComponentKeyPathLookup(root);
 
             return root["issues"]
                 .ToObject<ServerIssue[]>()
-                .Select(issue => ToSonarQubeIssue(issue))
+                .Select(ToSonarQubeIssue)
                 .ToArray();
         }
 
@@ -62,8 +65,6 @@ namespace SonarQube.Client.Api.V7_20
         /// issues and components, where each issue's "component" property points to a component with
         /// the same "key". We obtain the FilePath of each issue from its corresponding component.
         /// </summary>
-        /// <remarks>A new instance of this class is created for each request so it is safe to store the
-        /// lookup in an instance variable so we don't have to pass it around.</remarks>
         private ILookup<string, string> componentKeyPathLookup;
 
         private static ILookup<string, string> GetComponentKeyPathLookup(JObject root)
