@@ -28,8 +28,6 @@ namespace SonarQube.Client.Api.V8_1
 {
     public class GetHotspotRequest : RequestBase<SonarQubeHotspot>, IGetHotspotRequest
     {
-        //TODO - this is an internal API - change to use a public API when available
-
         protected override string Path => "api/hotspots/show";
 
         [JsonProperty("hotspot")]
@@ -38,9 +36,21 @@ namespace SonarQube.Client.Api.V8_1
         protected override SonarQubeHotspot ParseResponse(string response)
         {
             var serverResponse = JObject.Parse(response).ToObject<GetHotspotResponse>();
+
+            var rule = new SonarQubeHotspotRule(
+                serverResponse.Rule.Key,
+                serverResponse.Rule.Name,
+                serverResponse.Rule.SecurityCategory,
+                serverResponse.Rule.VulnerabilityProbability,
+                serverResponse.Rule.RiskDescription,
+                serverResponse.Rule.VulnerabilityDescription,
+                serverResponse.Rule.FixRecommendations
+            );
+
             var hotspot = new SonarQubeHotspot(
                 serverResponse.Key,
                 serverResponse.Message,
+                serverResponse.Hash,
                 serverResponse.Assignee,
                 serverResponse.Status,
                 serverResponse.Project.Organization,
@@ -48,10 +58,7 @@ namespace SonarQube.Client.Api.V8_1
                 serverResponse.Project.Name,
                 serverResponse.Component.Key,
                 FilePathNormalizer.NormalizeSonarQubePath(serverResponse.Component.Path),
-                serverResponse.Rule.Key,
-                serverResponse.Rule.Name,
-                serverResponse.Rule.SecurityCategory,
-                serverResponse.Rule.VulnerabilityProbability,
+                rule,
                 ToIssueTextRange(serverResponse.TextRange)
             );
 
@@ -71,6 +78,9 @@ namespace SonarQube.Client.Api.V8_1
 
             [JsonProperty("line")]
             public int Line { get; set; }
+
+            [JsonProperty("hash")]
+            public string Hash { get; set; }
 
             [JsonProperty("message")]
             public string Message { get; set; }
@@ -125,6 +135,15 @@ namespace SonarQube.Client.Api.V8_1
 
             [JsonProperty("vulnerabilityProbability")]
             public string VulnerabilityProbability { get; set; }
+
+            [JsonProperty("riskDescription")]
+            public string RiskDescription { get; set; }
+
+            [JsonProperty("vulnerabilityDescription")]
+            public string VulnerabilityDescription { get; set; }
+
+            [JsonProperty("fixRecommendations")]
+            public string FixRecommendations { get; set; }
         }
 
         private class ServerTextRange
