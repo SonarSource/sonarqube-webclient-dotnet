@@ -35,7 +35,7 @@ namespace SonarQube.Client.Tests
         public async Task GetHotspot_Response_From_SonarQube()
         {
             const string hotspotKey = "AW9mgJw6eFC3pGl94Wrf";
-            await ConnectToSonarQube("8.1.0.0");
+            await ConnectToSonarQube("8.6.0.0");
 
             SetupRequest($"api/hotspots/show?hotspot={hotspotKey}", @"{
   ""key"": ""AW9mgJw6eFC3pGl94Wrf"",

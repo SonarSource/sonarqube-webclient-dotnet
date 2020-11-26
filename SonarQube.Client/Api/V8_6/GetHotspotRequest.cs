@@ -24,7 +24,7 @@ using SonarQube.Client.Helpers;
 using SonarQube.Client.Models;
 using SonarQube.Client.Requests;
 
-namespace SonarQube.Client.Api.V8_1
+namespace SonarQube.Client.Api.V8_6
 {
     public class GetHotspotRequest : RequestBase<SonarQubeHotspot>, IGetHotspotRequest
     {
