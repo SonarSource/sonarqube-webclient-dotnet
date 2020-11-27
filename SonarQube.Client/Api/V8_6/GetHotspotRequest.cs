@@ -76,9 +76,6 @@ namespace SonarQube.Client.Api.V8_6
             [JsonProperty("status")]
             public string Status { get; set; }
 
-            [JsonProperty("line")]
-            public int Line { get; set; }
-
             [JsonProperty("hash")]
             public string Hash { get; set; }
 

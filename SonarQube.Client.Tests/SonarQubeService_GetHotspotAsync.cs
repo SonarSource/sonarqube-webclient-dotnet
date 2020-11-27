@@ -70,7 +70,6 @@ namespace SonarQube.Client.Tests
     ""endOffset"": 41
   },
   ""status"": ""TO_REVIEW"",
-  ""line"": 32,
   ""hash"": ""106b6a42b6099a78bbb233937f36c4bc"",
   ""message"": ""message"",
   ""assignee"": ""joe"",
