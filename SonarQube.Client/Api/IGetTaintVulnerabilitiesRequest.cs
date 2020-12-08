@@ -23,7 +23,10 @@ using SonarQube.Client.Requests;
 
 namespace SonarQube.Client.Api
 {
-    interface IGetTaintVulnerabilitiesRequest : IRequest<SonarQubeIssue[]>
+    /// <summary>
+    /// Returns taint vulnerabilities that are in status OPEN, CONFIRMED, or REOPENED.
+    /// </summary>
+    public interface IGetTaintVulnerabilitiesRequest : IRequest<SonarQubeIssue[]>
     {
         string ProjectKey { get; set; }
     }
