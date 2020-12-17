@@ -84,7 +84,7 @@ namespace SonarQube.Client.Tests.Models
             var testSubject = new ConnectionInformation(new Uri(serverUrl), userName, securePwd);
             testSubject.Organization = org;
 
-            var cloneObj = (ICloneable)testSubject.Clone();
+            var cloneObj = ((ICloneable)testSubject).Clone();
             cloneObj.Should().BeOfType<ConnectionInformation>();
 
             CheckPropertiesMatch(testSubject, (ConnectionInformation)cloneObj);
