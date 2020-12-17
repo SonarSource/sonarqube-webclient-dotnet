@@ -19,8 +19,10 @@
  */
 
 using System;
+using System.Security;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using SonarQube.Client.Helpers;
 using SonarQube.Client.Models;
 
 namespace SonarQube.Client.Tests.Models
@@ -29,11 +31,20 @@ namespace SonarQube.Client.Tests.Models
     public class ConnectionInformationTests
     {
         [TestMethod]
+        public void Ctor_InvalidServerUrl_Throws()
+        {
+            Action act = () => new ConnectionInformation(null);
+
+            act.Should().ThrowExactly<ArgumentNullException>().And.ParamName.Should().Be("serverUri");
+        }
+
+        [TestMethod]
         [DataRow("http://localhost", "http://localhost/")]
         [DataRow("http://localhost/", "http://localhost/")]
         [DataRow("http://localhost:9000", "http://localhost:9000/")]
         [DataRow("https://localhost:9000/", "https://localhost:9000/")]
         [DataRow("https://local.sonarcloud.io", "https://local.sonarcloud.io/")]
+        [DataRow("https://sonarcloud.io.local", "https://sonarcloud.io.local/")]
         public void Ctor_SonarQubeUrl_IsProcessedCorrectly(string inputUrl, string expectedUrl)
         {
             var testSubject = new ConnectionInformation(new Uri(inputUrl));
@@ -57,6 +68,66 @@ namespace SonarQube.Client.Tests.Models
 
             testSubject.ServerUri.Should().Be(ConnectionInformation.FixedSonarCloudUri);
             testSubject.IsSonarCloud.Should().BeTrue();
+        }
+
+        [TestMethod]
+        [DataRow("http://localhost", null, null, null)]
+        [DataRow("https://sonarcloud.io", null, null, null)]
+        [DataRow("http://localhost", "user1", "secret", null)]
+        [DataRow("http://sonarcloud.io", null, null, "myorg")]
+        [DataRow("http://sonarcloud.io", "a token", null, "myorg")]
+        public void Clone_PropertiesAreCopiedCorrectly(string serverUrl, string userName, string password, string orgKey)
+        {
+            var securePwd = InitializeSecureString(password);
+            var org = InitializeOrganization(orgKey);
+
+            var testSubject = new ConnectionInformation(new Uri(serverUrl), userName, securePwd);
+            testSubject.Organization = org;
+
+            var cloneConnection = testSubject.Clone();
+
+            CheckPropertiesMatch(testSubject, cloneConnection);
+        }
+
+        [TestMethod]
+        public void Dispose_PasswordIsDisposed()
+        {
+            var pwd = "secret".ToSecureString();
+            var testSubject = new ConnectionInformation(new Uri("http://any"), "any", pwd);
+
+            testSubject.Dispose();
+
+            testSubject.IsDisposed.Should().BeTrue();
+
+            Action accessPassword = () => _ = testSubject.Password.Length;
+            accessPassword.Should().ThrowExactly<ObjectDisposedException>();
+        }
+
+        private static SecureString InitializeSecureString(string password) =>
+            // The "ToSecureString" doesn't expect nulls, which we want to use in the tests
+            password == null ? null : password.ToSecureString();
+
+        private static SonarQubeOrganization InitializeOrganization(string orgKey) =>
+            orgKey == null ? null : new SonarQubeOrganization(orgKey, Guid.NewGuid().ToString());
+
+        private static void CheckPropertiesMatch(ConnectionInformation item1, ConnectionInformation item2)
+        {
+            item1.ServerUri.Should().Be(item2.ServerUri);
+            item1.UserName.Should().Be(item2.UserName);
+            item1.Organization.Should().Be(item2.Organization);
+
+
+            if (item1.Password == null)
+            {
+                item2.Password.Should().BeNull();
+            }
+            else
+            {
+                item1.Password.ToUnsecureString().Should().Be(item2.Password.ToUnsecureString());
+            }
+
+            item1.Authentication.Should().Be(item2.Authentication);
+            item1.IsSonarCloud.Should().Be(item2.IsSonarCloud);
         }
     }
 }

@@ -54,7 +54,6 @@ namespace SonarQube.Client.Tests
         [DataRow("http://localhost")]
         [DataRow("https://localhost/")]
         [DataRow("https://localhost:9000")]
-        [DataRow("http://local.sonarcloud.io/")]
         public async Task Connect_SonarQube_IsSonarCloud_SonarQubeUrl_ReturnsFalse(string inputUrl)
         {
             var canonicalUrl = inputUrl.TrimEnd('/');
@@ -72,13 +71,9 @@ namespace SonarQube.Client.Tests
 
         [TestMethod]
         [DataRow("http://sonarcloud.io")]
-        [DataRow("http://sonarcloud.io/")]
         [DataRow("https://sonarcloud.io")]
-        [DataRow("https://sonarcloud.io/")]
         [DataRow("http://SONARCLOUD.IO")]
         [DataRow("http://www.sonarcloud.io")]
-        [DataRow("https://www.sonarcloud.io/")]
-        [DataRow("http://sonarcloud.io:9999")]
         public async Task Connect_SonarQube_IsSonarCloud_SonarCloud_ReturnTrue(string inputUrl)
         {
             const string fixedSonarCloudUrl = "https://sonarcloud.io/";
