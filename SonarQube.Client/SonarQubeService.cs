@@ -36,10 +36,8 @@ namespace SonarQube.Client
 {
     public class SonarQubeService : ISonarQubeService, IDisposable
     {
-        internal static readonly Version OrganizationsFeatureMinimalVersion = new Version(6, 2);
-
         private readonly HttpMessageHandler messageHandler;
-        private readonly RequestFactory requestFactory;
+        private readonly IRequestFactory requestFactory;
         private readonly string userAgent;
         private readonly ILogger logger;
 
@@ -65,7 +63,7 @@ namespace SonarQube.Client
         {
         }
 
-        public SonarQubeService(HttpMessageHandler messageHandler, RequestFactory requestFactory, string userAgent, ILogger logger)
+        internal /* for testing */ SonarQubeService(HttpMessageHandler messageHandler, IRequestFactory requestFactory, string userAgent, ILogger logger)
         {
             if (messageHandler == null)
             {

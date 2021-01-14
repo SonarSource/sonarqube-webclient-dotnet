@@ -25,7 +25,12 @@ using SonarQube.Client.Logging;
 
 namespace SonarQube.Client.Requests
 {
-    public class RequestFactory
+    internal interface IRequestFactory
+    {
+        TRequest Create<TRequest>(Version version) where TRequest : IRequest;
+    }
+
+    internal class RequestFactory : IRequestFactory
     {
         /// <summary>
         /// Map between request type and a list with versioned request implementation factories.
