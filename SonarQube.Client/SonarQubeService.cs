@@ -43,8 +43,6 @@ namespace SonarQube.Client
 
         private HttpClient httpClient;
 
-        public Version SonarQubeVersion { get; private set; }
-
         public async Task<bool> HasOrganizations(CancellationToken token)
         {
             EnsureIsConnected();
@@ -56,7 +54,7 @@ namespace SonarQube.Client
 
         public bool IsConnected { get; private set; }
 
-        public bool IsSonarCloud { get; private set; }
+        public ServerInfo ServerInfo { get; private set; }
 
         public SonarQubeService(HttpMessageHandler messageHandler, string userAgent, ILogger logger)
             : this(messageHandler, DefaultConfiguration.Configure(new RequestFactory(logger)), userAgent, logger)
@@ -110,7 +108,7 @@ namespace SonarQube.Client
         {
             EnsureIsConnected();
 
-            var request = requestFactory.Create<TRequest>(SonarQubeVersion);
+            var request = requestFactory.Create<TRequest>(ServerInfo);
             configure(request);
 
             var result = await request.InvokeAsync(httpClient, token);
@@ -136,14 +134,15 @@ namespace SonarQube.Client
             httpClient.DefaultRequestHeaders.Add("User-Agent", userAgent);
 
             IsConnected = true;
-            IsSonarCloud = connection.IsSonarCloud;
+            var serverTypeDescription = connection.IsSonarCloud ? "SonarCloud" : "SonarQube";
 
-            logger.Debug($"Getting the version of SonarQube...");
+            logger.Debug($"Getting the version of {serverTypeDescription}...");
 
             var versionResponse = await InvokeRequestAsync<IGetVersionRequest, string>(token);
-            SonarQubeVersion = Version.Parse(versionResponse);
+            ServerInfo = new ServerInfo(Version.Parse(versionResponse),
+                connection.IsSonarCloud ? ServerType.SonarCloud : ServerType.SonarQube);
 
-            logger.Info($"Connected to SonarQube '{SonarQubeVersion}'.");
+            logger.Info($"Connected to {serverTypeDescription} '{ServerInfo.Version}'.");
 
             logger.Debug($"Validating the credentials...");
 
@@ -151,7 +150,7 @@ namespace SonarQube.Client
             if (!credentialResponse)
             {
                 IsConnected = false;
-                SonarQubeVersion = null;
+                ServerInfo = null;
                 throw new InvalidOperationException("Invalid credentials");
             }
 
@@ -166,7 +165,7 @@ namespace SonarQube.Client
             // Don't dispose the HttpClient when disconnecting. We'll need it if
             // the caller connects to another server.
             IsConnected = false;
-            SonarQubeVersion = null;
+            ServerInfo = null;
         }
 
         private void EnsureIsConnected()
@@ -355,7 +354,7 @@ namespace SonarQube.Client
             const string SonarQube_ViewHotspotRelativeUrl = "security_hotspots?id={0}&hotspots={1}";
             const string SonarCloud_ViewHotspotRelativeUrl = "project/security_hotspots?id={0}&hotspots={1}";
 
-            var urlFormat = IsSonarCloud ? SonarCloud_ViewHotspotRelativeUrl : SonarQube_ViewHotspotRelativeUrl;
+            var urlFormat = ServerInfo.ServerType == ServerType.SonarCloud ? SonarCloud_ViewHotspotRelativeUrl : SonarQube_ViewHotspotRelativeUrl;
 
             return new Uri(httpClient.BaseAddress, string.Format(urlFormat, projectKey, hotspotKey));
         }
@@ -372,7 +371,7 @@ namespace SonarQube.Client
                 if (disposing)
                 {
                     IsConnected = false;
-                    SonarQubeVersion = null;
+                    ServerInfo = null;
                     messageHandler.Dispose();
                 }
 
