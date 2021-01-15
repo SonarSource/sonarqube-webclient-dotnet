@@ -57,7 +57,7 @@ namespace SonarQube.Client
         public ServerInfo ServerInfo { get; private set; }
 
         public SonarQubeService(HttpMessageHandler messageHandler, string userAgent, ILogger logger)
-            : this(messageHandler, DefaultConfiguration.Configure(new RequestFactory(logger)), userAgent, logger)
+            : this(messageHandler, DefaultConfiguration.Create(logger), userAgent, logger)
         {
         }
 
@@ -89,7 +89,7 @@ namespace SonarQube.Client
         /// Convenience overload for requests that do not need configuration.
         /// </summary>
         private Task<TResponse> InvokeRequestAsync<TRequest, TResponse>(CancellationToken token)
-            where TRequest : IRequest<TResponse>
+            where TRequest : class, IRequest<TResponse>
         {
             return InvokeRequestAsync<TRequest, TResponse>(request => { }, token);
         }
@@ -104,7 +104,7 @@ namespace SonarQube.Client
         /// <returns>Returns the result of the request invocation.</returns>
         private async Task<TResponse> InvokeRequestAsync<TRequest, TResponse>(Action<TRequest> configure,
             CancellationToken token)
-            where TRequest : IRequest<TResponse>
+            where TRequest : class, IRequest<TResponse>
         {
             EnsureIsConnected();
 

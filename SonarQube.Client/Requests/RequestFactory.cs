@@ -100,7 +100,7 @@ namespace SonarQube.Client.Requests
         /// </param>
         /// <returns>New the newest TRequest implementation for the specified SonarQube version.</returns>
         public TRequest Create<TRequest>(ServerInfo serverInfo)
-            where TRequest : IRequest
+            where TRequest : class, IRequest
         {
             SortedList<Version, Func<IRequest>> map;
             if (registrations.TryGetValue(typeof(TRequest), out map))

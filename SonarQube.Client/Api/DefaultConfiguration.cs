@@ -18,13 +18,22 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+using SonarQube.Client.Logging;
 using SonarQube.Client.Requests;
 
 namespace SonarQube.Client.Api
 {
     internal static class DefaultConfiguration
     {
-        public static RequestFactory Configure(RequestFactory requestFactory)
+        public static IRequestFactory Create(ILogger logger)
+        {
+            var sonarQubeFactory = Configure(new RequestFactory(logger));
+
+            // TODO - add SonarCloud factory
+            return new AggregatingRequestFactory(sonarQubeFactory);
+        }
+
+        internal /* for testing */ static RequestFactory Configure(RequestFactory requestFactory)
         {
             requestFactory
                 .RegisterRequest<IGetPluginsRequest, V2_10.GetPluginsRequest>("2.1")

@@ -20,15 +20,26 @@
 
 namespace SonarQube.Client.Requests
 {
-    /// <summary>
-    /// Factory that creates request instance appropriate to the supplied server type/version
-    /// </summary>
-    internal interface IRequestFactory
+    internal class AggregatingRequestFactory : IRequestFactory
     {
-        /// <summary>
-        /// Creates and returns a new instance of the specified request
-        /// </summary>
-        /// <remarks>If the factory does not handle the specified server type it should return null</remarks>
-        TRequest Create<TRequest>(ServerInfo serverInfo) where TRequest : class, IRequest;
+        private readonly IRequestFactory[] requestFactories;
+
+        public AggregatingRequestFactory(params IRequestFactory[] requestFactories)
+        {
+            this.requestFactories = requestFactories;
+        }
+
+        public TRequest Create<TRequest>(ServerInfo serverInfo) where TRequest : class, IRequest
+        {
+            foreach (var factory in requestFactories)
+            {
+                var newRequest = factory.Create<TRequest>(serverInfo);
+                if (newRequest != null)
+                {
+                    return newRequest;
+                }
+            }
+            return null;
+        }
     }
 }

@@ -24,12 +24,29 @@ using SonarQube.Client.Requests;
 using SonarQube.Client.Api;
 using SonarQube.Client.Tests.Infra;
 using System.Diagnostics;
+using System;
 
 namespace SonarQube.Client.Tests.Requests
 {
     [TestClass]
     public class DefaultConfiguration_Configure
     {
+        [TestMethod]
+        public void Create_ReturnsConfiguredAggregatingFactory()
+        {
+            var logger = new TestLogger();
+
+            // Check the expected factory is returned
+            var actualFactory = DefaultConfiguration.Create(logger);
+            actualFactory.Should().NotBeNull();
+            actualFactory.Should().BeOfType<AggregatingRequestFactory>();
+
+            // Check the factory returns requests
+            var serverInfo = new ServerInfo(new Version(6, 7), ServerType.SonarQube);
+            var actualRequest = actualFactory.Create<IGetVersionRequest>(serverInfo);
+            actualRequest.Should().NotBeNull();
+        }
+
         [TestMethod]
         public void Configure_Writes_Debug_Messages()
         {
