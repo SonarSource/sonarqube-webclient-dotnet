@@ -131,7 +131,7 @@ namespace SonarQube.Client.Tests.Requests
             testSubject.Create<IGetTaintVulnerabilitiesRequest>(serverInfo).Should().NotBeNull();
             testSubject.Create<IGetVersionRequest>(serverInfo).Should().NotBeNull();
             testSubject.Create<IValidateCredentialsRequest>(serverInfo).Should().NotBeNull();
-            testSubject.Create<IGetSourceCode>(serverInfo).Should().NotBeNull();
+            testSubject.Create<IGetSourceCodeRequest>(serverInfo).Should().NotBeNull();
         }
 
         [TestMethod]
@@ -157,7 +157,7 @@ namespace SonarQube.Client.Tests.Requests
             testSubject.Create<IGetTaintVulnerabilitiesRequest>(serverInfo).Should().NotBeNull();
             testSubject.Create<IGetVersionRequest>(serverInfo).Should().NotBeNull();
             testSubject.Create<IValidateCredentialsRequest>(serverInfo).Should().NotBeNull();
-            testSubject.Create<IGetSourceCode>(serverInfo).Should().NotBeNull();
+            testSubject.Create<IGetSourceCodeRequest>(serverInfo).Should().NotBeNull();
         }
 
         private static void DumpDebugMessages(TestLogger logger)

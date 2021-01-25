@@ -23,7 +23,7 @@ using SonarQube.Client.Requests;
 
 namespace SonarQube.Client.Api.V5_00
 {
-    public class GetSourceCodeRequest : RequestBase<string>, IGetSourceCode
+    public class GetSourceCodeRequest : RequestBase<string>, IGetSourceCodeRequest
     {
         [JsonProperty("key")]
         public string FileKey { get; set; }

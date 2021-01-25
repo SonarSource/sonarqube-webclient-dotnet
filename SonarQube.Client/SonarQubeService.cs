@@ -364,7 +364,7 @@ namespace SonarQube.Client
         }
 
         public async Task<string> GetSourceCodeAsync(string fileKey, CancellationToken token) =>
-            await InvokeRequestAsync<IGetSourceCode, string>(
+            await InvokeRequestAsync<IGetSourceCodeRequest, string>(
                 request =>
                 {
                     request.FileKey = fileKey;

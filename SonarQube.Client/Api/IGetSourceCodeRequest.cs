@@ -22,7 +22,7 @@ using SonarQube.Client.Requests;
 
 namespace SonarQube.Client.Api
 {
-    public interface IGetSourceCode : IRequest<string>
+    public interface IGetSourceCodeRequest : IRequest<string>
     {
         string FileKey { get; set; }
     }

@@ -21,13 +21,10 @@
 using System;
 using System.Net;
 using System.Net.Http;
-using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using SonarQube.Client.Models;
-using SonarQube.Client.Tests.Infra;
 
 namespace SonarQube.Client.Tests
 {
@@ -39,12 +36,11 @@ namespace SonarQube.Client.Tests
         {
             await ConnectToSonarQube("5.0.0.0");
 
-            const string sourceCode = @"package org.sonar.check;
+            const string sourceCode = @"a
+b
 
-public enum Priority {
-/**
-  * WARNING : DO NOT CHANGE THE ENUMERATION ORDER
-  * the enum ordinal is used for db persistence";
+ccc";
+
             SetupRequest("api/sources/raw?key=my_project:src%2Ffoo%2FBar.php",
                 sourceCode);
 
