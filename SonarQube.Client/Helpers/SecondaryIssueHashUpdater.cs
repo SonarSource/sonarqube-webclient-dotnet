@@ -31,14 +31,19 @@ namespace SonarQube.Client.Helpers
     /// Sets the hashes for any secondary locations in the supplied list of issues
     /// </summary>
     /// <remarks>
+    /// <para>
     /// Currently secondary location hashes are not stored server-side, so we have to
     /// calculate them ourselves. This means fetching the source code for each file
     /// so we can get the line text and calculate the hash.
+    /// </para>
+    /// <para>
+    /// This component does not have any mutable state, so it can safely handle multiple
+    /// concurrent calls.
+    /// </para>
     /// </remarks>
     internal class SecondaryIssueHashUpdater
     {
         private readonly IChecksumCalculator checksumCalculator;
-        private Dictionary<string, string[]> moduleKeyToSourceLinesMap;
 
 
         public SecondaryIssueHashUpdater()
@@ -56,26 +61,25 @@ namespace SonarQube.Client.Helpers
             CancellationToken cancellationToken)
         {
             var secondaryLocations = GetSecondaryLocations(issues);
-
-            var uniqueKeys = GetUniqueSecondaryLocationKeys(secondaryLocations);
-
-            if (!uniqueKeys.Any())
+            if (!secondaryLocations.Any())
             {
                 // This will be the normal case: most issues don't have secondary locations
                 return;
             }
 
-            moduleKeyToSourceLinesMap = new Dictionary<string, string[]>();
+            var uniqueKeys = GetUniqueSecondaryLocationKeys(secondaryLocations);
+
+            var map = new ModuleKeyToSourceMap();
             foreach (var key in uniqueKeys)
             {
                 var sourceCode = await sonarQubeService.GetSourceCodeAsync(key, cancellationToken);
                 Debug.Assert(sourceCode != null, "Not expecting the file contents to be null");
-                AddSourceCodeToMap(key, sourceCode);
+                map.AddSourceCode(key, sourceCode);
             }
 
             foreach (var location in GetSecondaryLocations(issues))
             {
-                SetLineHash(location);
+                SetLineHash(map, location);
             }
         }
 
@@ -91,14 +95,11 @@ namespace SonarQube.Client.Helpers
                 .Distinct()
                 .ToArray();
 
-        private void AddSourceCodeToMap(string moduleKey, string source) =>
-            moduleKeyToSourceLinesMap.Add(moduleKey, source.Split('\n'));
-
-        private void SetLineHash(IssueLocation location)
+        private void SetLineHash(ModuleKeyToSourceMap map, IssueLocation location)
         {
             // Issue locations can span multiple lines, but only the first line is used
             // when calculating the hash
-            var firstLineOfIssue = GetLineText(location.ModuleKey, location.TextRange.StartLine);
+            var firstLineOfIssue = map.GetLineText(location.ModuleKey, location.TextRange.StartLine);
 
             if (firstLineOfIssue != null)
             {
@@ -106,18 +107,31 @@ namespace SonarQube.Client.Helpers
             }
         }
 
-        private string GetLineText(string moduleKey, int oneBasedLineNumber)
+        /// <summary>
+        /// Provide a lookup from module key -> source code line
+        /// </summary>
+        private class ModuleKeyToSourceMap
         {
-            Debug.Assert(moduleKeyToSourceLinesMap.ContainsKey(moduleKey), "Unexpected module key requested");
+            private readonly IDictionary<string, string[]> keyToLinesMap = new Dictionary<string, string[]>();
 
-            var lines = moduleKeyToSourceLinesMap[moduleKey];
-
-            if (oneBasedLineNumber > lines.Length)
+            public void AddSourceCode(string moduleKey, string sourceCode)
             {
-                return null;
+                keyToLinesMap.Add(moduleKey, sourceCode.Split('\n'));
             }
 
-            return lines[oneBasedLineNumber - 1];
+            public string GetLineText(string moduleKey, int oneBasedLineNumber)
+            {
+                Debug.Assert(keyToLinesMap.ContainsKey(moduleKey), "Unexpected module key requested");
+
+                var lines = keyToLinesMap[moduleKey];
+
+                if (oneBasedLineNumber > lines.Length)
+                {
+                    return null;
+                }
+
+                return lines[oneBasedLineNumber - 1];
+            }
         }
     }
 }
