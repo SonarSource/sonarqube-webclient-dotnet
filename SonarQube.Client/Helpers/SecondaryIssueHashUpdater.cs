@@ -37,14 +37,27 @@ namespace SonarQube.Client.Helpers
     /// </remarks>
     internal class SecondaryIssueHashUpdater
     {
-        private static readonly IChecksumCalculator checksumCalculator = new ChecksumCalculator();
-        private Dictionary<string, string> moduleKeyToSourceMap;
+        private readonly IChecksumCalculator checksumCalculator;
+        private Dictionary<string, string[]> moduleKeyToSourceLinesMap;
+
+
+        public SecondaryIssueHashUpdater()
+            : this(new ChecksumCalculator())
+        {
+        }
+
+        internal /* for testing */ SecondaryIssueHashUpdater(IChecksumCalculator checksumCalculator)
+        {
+            this.checksumCalculator = checksumCalculator;
+        }
 
         internal async Task UpdateHashesAsync(IEnumerable<SonarQubeIssue> issues,
             ISonarQubeService sonarQubeService,
             CancellationToken cancellationToken)
         {
-            var uniqueKeys = GetUniqueSecondaryLocationKeys(issues);
+            var secondaryLocations = GetSecondaryLocations(issues);
+
+            var uniqueKeys = GetUniqueSecondaryLocationKeys(secondaryLocations);
 
             if (!uniqueKeys.Any())
             {
@@ -52,12 +65,12 @@ namespace SonarQube.Client.Helpers
                 return;
             }
 
-            moduleKeyToSourceMap = new Dictionary<string, string>();
+            moduleKeyToSourceLinesMap = new Dictionary<string, string[]>();
             foreach (var key in uniqueKeys)
             {
                 var sourceCode = await sonarQubeService.GetSourceCodeAsync(key, cancellationToken);
                 Debug.Assert(sourceCode != null, "Not expecting the file contents to be null");
-                moduleKeyToSourceMap.Add(key, sourceCode);
+                AddSourceCodeToMap(key, sourceCode);
             }
 
             foreach (var location in GetSecondaryLocations(issues))
@@ -66,16 +79,20 @@ namespace SonarQube.Client.Helpers
             }
         }
 
-        private static IEnumerable<string> GetUniqueSecondaryLocationKeys(IEnumerable<SonarQubeIssue> issues) =>
-            GetSecondaryLocations(issues)
+        private static IEnumerable<IssueLocation> GetSecondaryLocations(IEnumerable<SonarQubeIssue> issues) =>
+            issues.SelectMany(
+                issue => issue.Flows.SelectMany(
+                    flow => flow.Locations))
+            .ToArray();
+
+        private static IEnumerable<string> GetUniqueSecondaryLocationKeys(IEnumerable<IssueLocation> locations) =>
+            locations
                 .Select(loc => loc.ModuleKey)
                 .Distinct()
                 .ToArray();
 
-        private static IEnumerable<IssueLocation> GetSecondaryLocations(IEnumerable<SonarQubeIssue> issues) =>
-            issues.SelectMany(
-                issue => issue.Flows.SelectMany(
-                    flow => flow.Locations));
+        private void AddSourceCodeToMap(string moduleKey, string source) =>
+            moduleKeyToSourceLinesMap.Add(moduleKey, source.Split('\n'));
 
         private void SetLineHash(IssueLocation location)
         {
@@ -91,10 +108,9 @@ namespace SonarQube.Client.Helpers
 
         private string GetLineText(string moduleKey, int oneBasedLineNumber)
         {
-            Debug.Assert(moduleKeyToSourceMap.ContainsKey(moduleKey), "Unexpected module key requested");
+            Debug.Assert(moduleKeyToSourceLinesMap.ContainsKey(moduleKey), "Unexpected module key requested");
 
-            var source = moduleKeyToSourceMap[moduleKey];
-            var lines = source.Split('\n');
+            var lines = moduleKeyToSourceLinesMap[moduleKey];
 
             if (oneBasedLineNumber > lines.Length)
             {

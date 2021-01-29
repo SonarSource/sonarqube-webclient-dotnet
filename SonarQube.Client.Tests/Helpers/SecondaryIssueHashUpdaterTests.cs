@@ -33,7 +33,6 @@ namespace SonarQube.Client.Helpers.Tests
     public class SecondaryIssueHashUpdaterTests
     {
         private const string PrimaryIssueHash = "the primary issue hash should not be affected";
-        private readonly IChecksumCalculator checksumCalculator = new ChecksumCalculator();
 
         [TestMethod]
         public async Task Populate_NoIssues_NoOp()
@@ -53,7 +52,7 @@ namespace SonarQube.Client.Helpers.Tests
             var issues = new[]
             {
                 CreateIssue("project1:key1", AddFlow()),
-                CreateIssue("project2:key2", AddFlow())
+                CreateIssue("project2:key2" /* no flows */)
             };
 
             var testSubject = new SecondaryIssueHashUpdater();
@@ -110,6 +109,11 @@ namespace SonarQube.Client.Helpers.Tests
 
             var file2Contents = $"111\n222\n{line3Contents}";
 
+            var calcMock = new Mock<IChecksumCalculator>();
+            SetupHash(calcMock, line1Contents, "expected line 1 hash");
+            SetupHash(calcMock, line2Contents, "expected line 2 hash");
+            SetupHash(calcMock, line3Contents, "expected line 3 hash");
+
             var issues = new[]
             {
                 CreateIssue("primary_only_should_not_be_fetched_1",
@@ -128,7 +132,7 @@ namespace SonarQube.Client.Helpers.Tests
             AddSourceFile(serviceMock, "file1", file1Contents);
             AddSourceFile(serviceMock, "file2", file2Contents);
 
-            var testSubject = new SecondaryIssueHashUpdater();
+            var testSubject = new SecondaryIssueHashUpdater(calcMock.Object);
 
             // Act
             await testSubject.UpdateHashesAsync(issues, serviceMock.Object, CancellationToken.None);
@@ -136,11 +140,11 @@ namespace SonarQube.Client.Helpers.Tests
             issues[0].Hash.Should().Be(PrimaryIssueHash);
             issues[1].Hash.Should().Be(PrimaryIssueHash);
 
-            issues[0].Flows[0].Locations[0].Hash.Should().Be(checksumCalculator.Calculate(line1Contents));
-            issues[0].Flows[0].Locations[1].Hash.Should().Be(checksumCalculator.Calculate(line2Contents));
+            issues[0].Flows[0].Locations[0].Hash.Should().Be("expected line 1 hash");
+            issues[0].Flows[0].Locations[1].Hash.Should().Be("expected line 2 hash");
 
             issues[1].Flows[0].Locations[0].Hash.Should().Be(null);
-            issues[1].Flows[0].Locations[1].Hash.Should().Be(checksumCalculator.Calculate(line3Contents));
+            issues[1].Flows[0].Locations[1].Hash.Should().Be("expected line 3 hash");
         }
 
         private static SonarQubeIssue CreateIssue(string moduleKey, params IssueFlow[] flows) =>
@@ -157,5 +161,8 @@ namespace SonarQube.Client.Helpers.Tests
 
         private static void AddSourceFile(Mock<ISonarQubeService> serviceMock, string moduleKey, string data = "") =>
             serviceMock.Setup(x => x.GetSourceCodeAsync(moduleKey, It.IsAny<CancellationToken>())).Returns(Task.FromResult(data));
+
+        private static void SetupHash(Mock<IChecksumCalculator> calcMock, string input, string hashToReturn) =>
+            calcMock.Setup(x => x.Calculate(input)).Returns(hashToReturn);
     }
 }
