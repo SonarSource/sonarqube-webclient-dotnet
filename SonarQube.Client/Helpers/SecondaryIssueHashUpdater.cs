@@ -38,7 +38,7 @@ namespace SonarQube.Client.Helpers
     internal class SecondaryIssueHashUpdater
     {
         private static readonly IChecksumCalculator checksumCalculator = new ChecksumCalculator();
-        private Dictionary<string, string> componentKeyToSourceMap;
+        private Dictionary<string, string> moduleKeyToSourceMap;
 
         internal async Task UpdateHashesAsync(IEnumerable<SonarQubeIssue> issues,
             ISonarQubeService sonarQubeService,
@@ -52,12 +52,12 @@ namespace SonarQube.Client.Helpers
                 return;
             }
 
-            componentKeyToSourceMap = new Dictionary<string, string>();
+            moduleKeyToSourceMap = new Dictionary<string, string>();
             foreach (var key in uniqueKeys)
             {
                 var sourceCode = await sonarQubeService.GetSourceCodeAsync(key, cancellationToken);
                 Debug.Assert(sourceCode != null, "Not expecting the file contents to be null");
-                componentKeyToSourceMap.Add(key, sourceCode);
+                moduleKeyToSourceMap.Add(key, sourceCode);
             }
 
             foreach (var location in GetSecondaryLocations(issues))
@@ -79,6 +79,8 @@ namespace SonarQube.Client.Helpers
 
         private void SetLineHash(IssueLocation location)
         {
+            // Issue locations can span multiple lines, but only the first line is used
+            // when calculating the hash
             var firstLineOfIssue = GetLineText(location.ModuleKey, location.TextRange.StartLine);
 
             if (firstLineOfIssue != null)
@@ -87,23 +89,19 @@ namespace SonarQube.Client.Helpers
             }
         }
 
-        private string GetLineText(string componentKey, int sqLine)
+        private string GetLineText(string moduleKey, int oneBasedLineNumber)
         {
-            // SonarQube lines are one-based
-            string source;
-            if (!componentKeyToSourceMap.TryGetValue(componentKey, out source))
-            {
-                return null;
-            }
+            Debug.Assert(moduleKeyToSourceMap.ContainsKey(moduleKey), "Unexpected module key requested");
 
+            var source = moduleKeyToSourceMap[moduleKey];
             var lines = source.Split('\n');
 
-            if (sqLine > lines.Length)
+            if (oneBasedLineNumber > lines.Length)
             {
                 return null;
             }
 
-            return lines[sqLine - 1];
+            return lines[oneBasedLineNumber - 1];
         }
     }
 }

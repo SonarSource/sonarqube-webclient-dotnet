@@ -108,7 +108,7 @@ namespace SonarQube.Client.Helpers.Tests
 
             var file1Contents = $"{line1Contents}\n{line2Contents}\nfoo foo foo";
 
-            var file2Contents = $"111\n222\n{line3Contents}\n\n\n\n\n";
+            var file2Contents = $"111\n222\n{line3Contents}";
 
             var issues = new[]
             {
@@ -119,7 +119,7 @@ namespace SonarQube.Client.Helpers.Tests
                         )),
                 CreateIssue("primary_only_should_not_be_fetched_2",
                     AddFlow(
-                        CreateLocation("file2", startLine: 9999), // beyond the end of the file -> should be ignored
+                        CreateLocation("file2", startLine: 4), // beyond the end of the file -> should be ignored
                         CreateLocation("file2", startLine: 3)
                         ))
             };
