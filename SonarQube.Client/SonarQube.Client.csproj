@@ -8,7 +8,7 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <RequiresSigning>true</RequiresSigning>
 
-    <RequiresNewtonSoft>true</RequiresNewtonSoft>
+    <RequiresNewtonsoft>true</RequiresNewtonsoft>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
