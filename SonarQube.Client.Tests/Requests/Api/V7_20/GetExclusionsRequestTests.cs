@@ -35,12 +35,11 @@ namespace SonarQube.Client.Tests.Requests.Api.V7_20
     public class GetExclusionsRequestTests
     {
         [TestMethod]
-        [DataRow("sonar.sources")]
-        [DataRow("sonar.exclusions")]
-        [DataRow("sonar.global.exclusions")]
-        [DataRow("sonar.inclusions")]
-        [DataRow("sonar.global.inclusions")]
-        public async Task InvokeAsync_MultiValueSetting(string keyName)
+        [DataRow("")]
+        [DataRow(@"{}")]
+        [DataRow(@"{""settings"": []}")]
+        [DataRow(@"{""settings"": [{""key"": ""some.other.setting"",""values"": [""val1""]}]}")]
+        public async Task InvokeAsync_AllSettingAreMissing_ReturnsEmptyConfiguration(string response)
         {
             const string projectKey = "myproject";
 
@@ -52,27 +51,109 @@ namespace SonarQube.Client.Tests.Requests.Api.V7_20
                 BaseAddress = new Uri(ValidBaseAddress)
             };
 
-            var request = $"api/settings/values?component={projectKey}&keys=sonar.exclusions%2Csonar.global.exclusions%2Csonar.inclusions%2Csonar.global.inclusions%2Csonar.sources";
-            var response = $@"{{
-	""settings"": [
-		{{
-			""key"": {keyName},
-			""values"": [
-				""**/value1"",
-				""value2"",
-				""some/value/3"",
-			]
-		}}
-	]
-}}";
+            var request = $"api/settings/values?component={projectKey}&keys=sonar.exclusions%2Csonar.global.exclusions%2Csonar.inclusions%2Csonar.global.inclusions";
 
             SetupHttpRequest(handlerMock, request, response);
 
             var result = await testSubject.InvokeAsync(httpClient, CancellationToken.None);
             result.Should().NotBeNull();
 
-            result.Exclusions.Should().BeEquivalentTo("apps/backend/db/newsletters");
-            result.GlobalExclusions.Should().BeEquivalentTo("**/build-wrapper-dump.json");
+            result.Exclusions.Should().BeEmpty();
+            result.GlobalExclusions.Should().BeEmpty();
+            result.Inclusions.Should().BeEmpty();
+            result.GlobalInclusions.Should().BeEmpty();
+        }
+
+        [TestMethod]
+        [Description("This is what SonarCloud returns when the setting is not defined")]
+        public async Task InvokeAsync_SomeMissingSetting_ReturnsDefinedProperties()
+        {
+            const string projectKey = "myproject";
+
+            var testSubject = CreateTestSubject(projectKey);
+
+            var handlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
+            var httpClient = new HttpClient(handlerMock.Object)
+            {
+                BaseAddress = new Uri(ValidBaseAddress)
+            };
+
+            var request = $"api/settings/values?component={projectKey}&keys=sonar.exclusions%2Csonar.global.exclusions%2Csonar.inclusions%2Csonar.global.inclusions";
+            var response = @"{
+	""settings"": [
+		{
+			""key"": ""sonar.global.inclusions"",
+			""values"": [
+				""**/build-wrapper-dump.json""
+			]
+		}
+	]
+}";
+
+            SetupHttpRequest(handlerMock, request, response);
+
+            var result = await testSubject.InvokeAsync(httpClient, CancellationToken.None);
+            result.Should().NotBeNull();
+
+            result.Exclusions.Should().BeEmpty();
+            result.GlobalExclusions.Should().BeEmpty();
+            result.Inclusions.Should().BeEmpty();
+            result.GlobalInclusions.Should().BeEquivalentTo("**/build-wrapper-dump.json");
+        }
+
+        [TestMethod]
+        public async Task InvokeAsync_ExistingSetting_ReturnsDefinedProperties()
+        {
+            const string projectKey = "myproject";
+
+            var testSubject = CreateTestSubject(projectKey);
+
+            var handlerMock = new Mock<HttpMessageHandler>(MockBehavior.Strict);
+            var httpClient = new HttpClient(handlerMock.Object)
+            {
+                BaseAddress = new Uri(ValidBaseAddress)
+            };
+
+            var request = $"api/settings/values?component={projectKey}&keys=sonar.exclusions%2Csonar.global.exclusions%2Csonar.inclusions%2Csonar.global.inclusions";
+            var response = @"{
+	""settings"": [
+		{
+			""key"": ""sonar.exclusions"",
+			""values"": [
+				""**/value1"",
+				""value2"",
+				""some/value/3"",
+			]
+		},
+		{
+			""key"": ""sonar.global.exclusions"",
+			""values"": [
+				""some/value/4"",
+			]
+		},
+		{
+			""key"": ""sonar.inclusions"",
+			""values"": []
+		},
+		{
+			""key"": ""sonar.global.inclusions"",
+			""values"": [
+				""**/value/5/6/7"",
+				""value/**/8"",
+			]
+		}
+	]
+}";
+
+            SetupHttpRequest(handlerMock, request, response);
+
+            var result = await testSubject.InvokeAsync(httpClient, CancellationToken.None);
+            result.Should().NotBeNull();
+
+            result.Exclusions.Should().BeEquivalentTo("**/value1", "value2", "some/value/3");
+            result.GlobalExclusions.Should().BeEquivalentTo("some/value/4");
+            result.Inclusions.Should().BeEmpty();
+            result.GlobalInclusions.Should().BeEquivalentTo("**/value/5/6/7", "value/**/8");
         }
         
 

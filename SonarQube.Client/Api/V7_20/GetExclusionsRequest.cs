@@ -18,6 +18,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -28,17 +29,27 @@ namespace SonarQube.Client.Api.V7_20
 {
     public class GetExclusionsRequest : RequestBase<ServerExclusions>, IGetExclusionsRequest
     {
+        internal const string ExclusionsKey = "sonar.exclusions";
+        internal const string GlobalExclusionsKey = "sonar.global.exclusions";
+        internal const string InclusionsKey = "sonar.inclusions";
+        internal const string GlobalInclusionsKey = "sonar.global.inclusions";
+
         [JsonProperty("component")]
         public virtual string ProjectKey { get; set; }
 
         [JsonProperty("keys")]
         public virtual string Keys { get; } =
-            "sonar.exclusions,sonar.global.exclusions,sonar.inclusions,sonar.global.inclusions,sonar.sources";
+            string.Join(",", ExclusionsKey, GlobalExclusionsKey, InclusionsKey, GlobalInclusionsKey);
 
         protected override string Path => "api/settings/values";
 
         protected override ServerExclusions ParseResponse(string response)
         {
+            if (string.IsNullOrEmpty(response))
+            {
+                return new ServerExclusions();
+            }
+
             var jsonParse = JObject.Parse(response);
 
             var settings = jsonParse["settings"]?.ToObject<Setting[]>();
@@ -48,23 +59,24 @@ namespace SonarQube.Client.Api.V7_20
                 return new ServerExclusions();
             }
 
-            var sonarSources = settings.SingleOrDefault(x => x.Key == "sonar.sources");
-            var exclusions = settings.SingleOrDefault(x => x.Key == "sonar.exclusions");
-            var globalExclusions = settings.SingleOrDefault(x => x.Key == "sonar.global.exclusions");
-            var inclusions = settings.SingleOrDefault(x => x.Key == "sonar.inclusions");
-            var globalInclusions = settings.SingleOrDefault(x => x.Key == "sonar.global.inclusions");
+            var exclusions = GetValues(settings, ExclusionsKey);
+            var globalExclusions = GetValues(settings, GlobalExclusionsKey);
+            var inclusions = GetValues(settings, InclusionsKey);
+            var globalInclusions = GetValues(settings, GlobalInclusionsKey);
 
-            return new ServerExclusions
-            {
-                SonarSources = sonarSources?.Values, 
-                Exclusions = exclusions?.Values,
-                GlobalExclusions = globalExclusions?.Values,
-                Inclusions = inclusions?.Values,
-                GlobalInclusions = globalInclusions?.Values
-            };
+            return new ServerExclusions(
+                exclusions: exclusions,
+                globalExclusions: globalExclusions,
+                inclusions: inclusions,
+                globalInclusions: globalInclusions);
         }
 
-        private class Setting   
+        private static string[] GetValues(IEnumerable<Setting> settings, string key)
+        {
+            return settings.SingleOrDefault(x => x.Key == key)?.Values;
+        }
+
+        private sealed class Setting   
         {
             [JsonProperty("key")]
             public string Key { get; set; }

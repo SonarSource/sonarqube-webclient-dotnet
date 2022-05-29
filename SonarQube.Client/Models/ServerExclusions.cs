@@ -18,11 +18,30 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+using System;
+
 namespace SonarQube.Client.Models
 {
     public class ServerExclusions
     {
-        public string[] SonarSources { get; set; }
+        private static readonly string[] EmptyValues = Array.Empty<string>();
+
+        public ServerExclusions()
+            : this(null, null, null, null)
+        {
+        }
+
+        public ServerExclusions(string[] exclusions,
+            string[] globalExclusions,
+            string[] inclusions,
+            string[] globalInclusions)
+        {
+            Exclusions = exclusions ?? EmptyValues;
+            GlobalExclusions = globalExclusions ?? EmptyValues;
+            Inclusions = inclusions ?? EmptyValues;
+            GlobalInclusions = globalInclusions ?? EmptyValues;
+        }
+
         public string[] Exclusions { get; set; }
         public string[] GlobalExclusions { get; set; }
         public string[] Inclusions { get; set; }
