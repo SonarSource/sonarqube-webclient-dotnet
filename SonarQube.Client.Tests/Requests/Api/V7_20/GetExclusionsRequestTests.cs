@@ -133,7 +133,9 @@ namespace SonarQube.Client.Tests.Requests.Api.V7_20
 		},
 		{
 			""key"": ""sonar.inclusions"",
-			""values"": []
+			""values"": [
+                ""**/111""
+            ]
 		},
 		{
 			""key"": ""sonar.global.inclusions"",
@@ -152,7 +154,7 @@ namespace SonarQube.Client.Tests.Requests.Api.V7_20
 
             result.Exclusions.Should().BeEquivalentTo("**/value1", "value2", "some/value/3");
             result.GlobalExclusions.Should().BeEquivalentTo("some/value/4");
-            result.Inclusions.Should().BeEmpty();
+            result.Inclusions.Should().BeEquivalentTo("**/111");
             result.GlobalInclusions.Should().BeEquivalentTo("**/value/5/6/7", "value/**/8");
         }
         
