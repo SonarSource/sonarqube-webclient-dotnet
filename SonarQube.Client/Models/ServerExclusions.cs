@@ -57,5 +57,18 @@ namespace SonarQube.Client.Models
                    "\n    Exclusions: " + string.Join(",", Exclusions) +
                    "\n    Global Exclusions: " + string.Join(",", GlobalExclusions);
         }
+
+        public override bool Equals(object obj)
+        {
+            return Equals((ServerExclusions)obj);
+        }
+
+        public bool Equals(ServerExclusions other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+
+            return ToString().Equals(other.ToString());
+        }
     }
 }
