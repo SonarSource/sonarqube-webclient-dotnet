@@ -23,7 +23,7 @@ using Newtonsoft.Json;
 
 namespace SonarQube.Client.Models
 {
-    public sealed class ServerExclusions
+    public sealed class ServerExclusions : IEquatable<ServerExclusions>
     {
         private static readonly string[] EmptyValues = Array.Empty<string>();
 
