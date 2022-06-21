@@ -23,7 +23,7 @@ using Newtonsoft.Json;
 
 namespace SonarQube.Client.Models
 {
-    public class ServerExclusions
+    public sealed class ServerExclusions
     {
         private static readonly string[] EmptyValues = Array.Empty<string>();
 
@@ -69,6 +69,11 @@ namespace SonarQube.Client.Models
             if (ReferenceEquals(this, other)) return true;
 
             return ToString().Equals(other.ToString());
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
         }
     }
 }
