@@ -65,8 +65,15 @@ namespace SonarQube.Client.Models
 
         public bool Equals(ServerExclusions other)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
+            if (other == null)
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
 
             return ToString().Equals(other.ToString());
         }
