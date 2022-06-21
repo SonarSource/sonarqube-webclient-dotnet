@@ -60,7 +60,7 @@ namespace SonarQube.Client.Models
 
         public override bool Equals(object obj)
         {
-            return Equals((ServerExclusions)obj);
+            return Equals(obj as ServerExclusions);
         }
 
         public bool Equals(ServerExclusions other)
