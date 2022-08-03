@@ -19,9 +19,14 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using SonarQube.Client.Messages;
+using SonarQube.Client.Models;
 
 namespace SonarQube.Client.Tests
 {
@@ -60,6 +65,20 @@ namespace SonarQube.Client.Tests
                 .WithMessage("This operation expects the service to be connected.");
 
             logger.ErrorMessages.Should().Contain("The service is expected to be connected.");
+        }
+
+        [TestMethod]
+        [Description("Regression test for https://github.com/SonarSource/sonarlint-visualstudio/issues/3142")]
+        public async Task GetProjectDashboardUrl_DisconnectedInTheMiddle_NoException()
+        {
+            await ConnectToSonarQube("3.3.0.0", serverUrl: "https://sonarcloud.io");
+
+            service.Disconnect();
+
+            var result = service.GetProjectDashboardUrl("myProject");
+
+            result.Should().NotBeNull();
+            result.Should().BeEquivalentTo(new Uri("https://sonarcloud.io/project/overview?id=myProject"));
         }
     }
 }
