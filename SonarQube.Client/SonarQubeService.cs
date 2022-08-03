@@ -44,6 +44,9 @@ namespace SonarQube.Client
         private readonly ISecondaryIssueHashUpdater secondaryIssueHashUpdater;
 
         private HttpClient httpClient;
+        private ServerInfo currentServerInfo;
+
+        public ServerInfo GetServerInfo() => currentServerInfo;
 
         public async Task<bool> HasOrganizations(CancellationToken token)
         {
@@ -54,9 +57,8 @@ namespace SonarQube.Client
             return await Task.FromResult<bool>(hasOrganisations);
         }
 
-        public bool IsConnected => ServerInfo != null;
+        public bool IsConnected => currentServerInfo != null;
 
-        public ServerInfo ServerInfo { get; private set; }
 
         public SonarQubeService(HttpMessageHandler messageHandler, string userAgent, ILogger logger)
             : this(messageHandler, userAgent, logger, new RequestFactorySelector(), new SecondaryLocationHashUpdater())
@@ -115,7 +117,7 @@ namespace SonarQube.Client
         private async Task<TResponse> InvokeUnauthenticatedRequestAsync<TRequest, TResponse>(Action<TRequest> configure, CancellationToken token)
             where TRequest : IRequest<TResponse>
         {
-            var request = requestFactory.Create<TRequest>(ServerInfo);
+            var request = requestFactory.Create<TRequest>(currentServerInfo);
             configure(request);
 
             var result = await request.InvokeAsync(httpClient, token);
@@ -163,11 +165,11 @@ namespace SonarQube.Client
 
                 logger.Debug($"Credentials accepted.");
 
-                ServerInfo = serverInfo;
+                currentServerInfo = serverInfo;
             }
             catch
             {
-                ServerInfo = null;
+                currentServerInfo = null;
                 throw;
             }
         }
@@ -179,7 +181,7 @@ namespace SonarQube.Client
 
             // Don't dispose the HttpClient when disconnecting. We'll need it if
             // the caller connects to another server.
-            ServerInfo = null;
+            currentServerInfo = null;
             requestFactory = null;
         }
 
@@ -238,7 +240,7 @@ namespace SonarQube.Client
             const string SonarQube_ProjectDashboardRelativeUrl = "dashboard/index/{0}";
             const string SonarCloud_ProjectDashboardRelativeUrl = "project/overview?id={0}";
 
-            var urlFormat = ServerInfo.ServerType == ServerType.SonarCloud ? SonarCloud_ProjectDashboardRelativeUrl : SonarQube_ProjectDashboardRelativeUrl;
+            var urlFormat = currentServerInfo.ServerType == ServerType.SonarCloud ? SonarCloud_ProjectDashboardRelativeUrl : SonarQube_ProjectDashboardRelativeUrl;
 
             return new Uri(httpClient.BaseAddress, string.Format(urlFormat, projectKey));
         }
@@ -377,7 +379,7 @@ namespace SonarQube.Client
             const string SonarQube_ViewHotspotRelativeUrl = "security_hotspots?id={0}&hotspots={1}";
             const string SonarCloud_ViewHotspotRelativeUrl = "project/security_hotspots?id={0}&hotspots={1}";
 
-            var urlFormat = ServerInfo.ServerType == ServerType.SonarCloud ? SonarCloud_ViewHotspotRelativeUrl : SonarQube_ViewHotspotRelativeUrl;
+            var urlFormat = currentServerInfo.ServerType == ServerType.SonarCloud ? SonarCloud_ViewHotspotRelativeUrl : SonarQube_ViewHotspotRelativeUrl;
 
             return new Uri(httpClient.BaseAddress, string.Format(urlFormat, projectKey, hotspotKey));
         }
@@ -415,7 +417,7 @@ namespace SonarQube.Client
                 logger.Debug("SonarQubeService was not disposed, continuing with dispose...");
                 if (disposing)
                 {
-                    ServerInfo = null;
+                    currentServerInfo = null;
                     messageHandler.Dispose();
                 }
 
