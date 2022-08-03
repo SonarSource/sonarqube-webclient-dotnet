@@ -56,12 +56,14 @@ namespace SonarQube.Client.Tests
             {
             }
 
-            protected override void EnsureIsConnected()
+            protected override ServerInfo EnsureIsConnected()
             {
-                base.EnsureIsConnected();
+                var serverInfo = base.EnsureIsConnected();
 
                 // Simulate disconnecting immediately after calling Ensure
                 Disconnect();
+
+                return serverInfo;
             }
         }
     }
