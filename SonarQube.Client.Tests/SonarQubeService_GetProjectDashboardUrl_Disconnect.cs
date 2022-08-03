@@ -19,47 +19,50 @@
  */
 
 using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using SonarQube.Client.Helpers;
+using SonarQube.Client.Logging;
+using SonarQube.Client.Requests;
 
 namespace SonarQube.Client.Tests
 {
     [TestClass]
-    public class SonarQubeService_GetProjectDashboardUrl : SonarQubeService_TestBase
+    public class SonarQubeService_GetProjectDashboardUrl_Disconnect : SonarQubeService_TestBase
     {
         [TestMethod]
-        public async Task GetProjectDashboardUrl_SonarQube_ReturnsExpectedUrl()
-        {
-            await ConnectToSonarQube("3.3.0.0", "http://localhost:9000");
-
-            var result = service.GetProjectDashboardUrl("myProject");
-
-            result.Should().BeEquivalentTo(new Uri("http://localhost:9000/dashboard/index/myProject"));
-        }
-
-        [TestMethod]
-        public async Task GetProjectDashboardUrl_SonarCloud_ReturnsExpectedUrl()
+        [Description("Regression test for https://github.com/SonarSource/sonarlint-visualstudio/issues/3142")]
+        public async Task GetProjectDashboardUrl_DisconnectedInTheMiddle_NoException()
         {
             await ConnectToSonarQube("3.3.0.0", serverUrl: "https://sonarcloud.io");
 
             var result = service.GetProjectDashboardUrl("myProject");
 
+            result.Should().NotBeNull();
             result.Should().BeEquivalentTo(new Uri("https://sonarcloud.io/project/overview?id=myProject"));
         }
 
-        [TestMethod]
-        public void GetProjectDashboardUrl_NotConnected()
+        protected internal override SonarQubeService CreateTestSubject()
         {
-            // No calls to Connect
-            // No need to setup request, the operation should fail
+            return new DisconnectingService(messageHandler.Object, UserAgent, logger, requestFactorySelector, secondaryIssueHashUpdater.Object);
+        }
 
-            Action action = () => service.GetProjectDashboardUrl("myProject");
+        internal class DisconnectingService : SonarQubeService
+        {
+            internal DisconnectingService(HttpMessageHandler messageHandler, string userAgent, ILogger logger, IRequestFactorySelector requestFactorySelector, ISecondaryIssueHashUpdater secondaryIssueHashUpdater)
+                : base(messageHandler, userAgent, logger, requestFactorySelector, secondaryIssueHashUpdater)
+            {
+            }
 
-            action.Should().ThrowExactly<InvalidOperationException>()
-                .WithMessage("This operation expects the service to be connected.");
+            protected override void EnsureIsConnected()
+            {
+                base.EnsureIsConnected();
 
-            logger.ErrorMessages.Should().Contain("The service is expected to be connected.");
+                // Simulate disconnecting immediately after calling Ensure
+                Disconnect();
+            }
         }
     }
 }

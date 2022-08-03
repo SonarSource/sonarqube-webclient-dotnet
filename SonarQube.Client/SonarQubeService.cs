@@ -188,7 +188,7 @@ namespace SonarQube.Client
             requestFactory = null;
         }
 
-        private void EnsureIsConnected()
+        protected virtual void EnsureIsConnected()
         {
             if (!IsConnected)
             {
