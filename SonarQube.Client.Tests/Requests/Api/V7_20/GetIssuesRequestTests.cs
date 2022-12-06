@@ -356,7 +356,7 @@ namespace SonarQube.Client.Tests.Requests.Api.V7_20
 
             // Branch is not null/empty => should be passed
             var actualQueryString = GetSingleActualQueryString(handlerMock);
-            actualQueryString.Contains($"branch={requestedBranch}").Should().BeTrue();
+            actualQueryString.Contains($"&branch={requestedBranch}&").Should().BeTrue();
         }
 
         private static GetIssuesRequest CreateTestSubject(string projectKey, string statusesToRequest, string branch = null)
