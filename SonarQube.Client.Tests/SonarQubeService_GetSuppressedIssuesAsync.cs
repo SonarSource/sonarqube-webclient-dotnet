@@ -370,7 +370,7 @@ namespace SonarQube.Client.Tests
         [TestMethod]
         [DataRow("")]
         [DataRow(null)]
-        public async Task GetSuppressedIssuesAsync_From_7_20_Paging_BranchIsNotSpecified_BranchIsNotIncludedInQueryString(string emptyBranch)
+        public async Task GetSuppressedIssuesAsync_From_7_20_BranchIsNotSpecified_BranchIsNotIncludedInQueryString(string emptyBranch)
         {
             await ConnectToSonarQube("7.2.0.0");
             messageHandler.Reset();
@@ -385,7 +385,7 @@ namespace SonarQube.Client.Tests
         }
 
         [TestMethod]
-        public async Task GetSuppressedIssuesAsync_From_7_20_Paging_BranchIsSpecified_BranchIncludedInQueryString()
+        public async Task GetSuppressedIssuesAsync_From_7_20_BranchIsSpecified_BranchIncludedInQueryString()
         {
             await ConnectToSonarQube("7.2.0.0");
             messageHandler.Reset();
