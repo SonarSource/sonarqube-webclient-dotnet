@@ -129,6 +129,6 @@ namespace SonarQube.Client
         /// <summary>
         /// Creates a new <see cref="IServerSentEventsSession"/> for the given <see cref="projectKey"/>
         /// </summary>
-        IServerSentEventsSession CreateServerSentEventsSession(string projectKey, CancellationToken token);
+        Task<IServerSentEventsSession> CreateServerSentEventsSession(string projectKey, CancellationToken token);
     }
 }

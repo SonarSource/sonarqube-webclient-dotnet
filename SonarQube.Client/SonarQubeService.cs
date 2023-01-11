@@ -416,7 +416,7 @@ namespace SonarQube.Client
                     request.ProjectKey = projectKey;
                 }, token);
 
-        public IServerSentEventsSession CreateServerSentEventsSession(string projectKey, CancellationToken token)
+        public Task<IServerSentEventsSession> CreateServerSentEventsSession(string projectKey, CancellationToken token)
         {
             throw new NotImplementedException();
         }
