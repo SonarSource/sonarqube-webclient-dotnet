@@ -29,6 +29,11 @@ namespace SonarQube.Client.Models
         public static readonly SonarQubeLanguage Js = new SonarQubeLanguage("js", "JavaScript", "javascript");
         public static readonly SonarQubeLanguage Ts = new SonarQubeLanguage("ts", "TypeScript", "typescript");
 
+        public static readonly SonarQubeLanguage[] AllLanguages =
+        {
+            CSharp, VbNet, Cpp, C, Js, Ts
+        };
+
         public string Key { get; }
 
         public string Name { get; }
