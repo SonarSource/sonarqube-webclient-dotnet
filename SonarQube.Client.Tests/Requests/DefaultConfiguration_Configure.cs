@@ -18,12 +18,14 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+using System;
 using System.Diagnostics;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SonarQube.Client.Api;
 using SonarQube.Client.Requests;
 using SonarQube.Client.Tests.Infra;
+using static Google.Protobuf.WellKnownTypes.Field.Types;
 
 namespace SonarQube.Client.Tests.Requests
 {
@@ -139,6 +141,7 @@ namespace SonarQube.Client.Tests.Requests
             testSubject.Create<IGetSourceCodeRequest>(serverInfo).Should().NotBeNull();
             testSubject.Create<IGetProjectBranchesRequest>(serverInfo).Should().NotBeNull();
             testSubject.Create<IGetExclusionsRequest>(serverInfo).Should().NotBeNull();
+            testSubject.Create<IGetSonarLintEventStream>(serverInfo).Should().NotBeNull();
         }
 
         [TestMethod]
@@ -167,6 +170,18 @@ namespace SonarQube.Client.Tests.Requests
             testSubject.Create<IGetSourceCodeRequest>(serverInfo).Should().NotBeNull();
             testSubject.Create<IGetProjectBranchesRequest>(serverInfo).Should().NotBeNull();
             testSubject.Create<IGetExclusionsRequest>(serverInfo).Should().NotBeNull();
+        }
+
+        [TestMethod]
+        [Description("The following APIs are not implemented on SC (yet). Verify that they are not registered in the factory.")]
+        public void ConfigureSonarCloud_CheckUnsupportedRequestsAreNotImplemented()
+        {
+            var testSubject = DefaultConfiguration.ConfigureSonarCloud(new UnversionedRequestFactory(new TestLogger()));
+            var serverInfo = new ServerInfo(null /* latest */, ServerType.SonarQube);
+
+            Action act = () => testSubject.Create<IGetSonarLintEventStream>(serverInfo);
+            act.Should().Throw<InvalidOperationException>().And.Message.Should()
+                .Be("Could not find factory for 'IGetSonarLintEventStream'.");
         }
 
         private static void DumpDebugMessages(TestLogger logger)
