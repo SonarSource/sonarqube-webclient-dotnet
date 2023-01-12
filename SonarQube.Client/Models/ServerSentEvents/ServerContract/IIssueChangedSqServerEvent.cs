@@ -25,16 +25,19 @@ namespace SonarQube.Client.Models.ServerSentEvents.ServerContract
     /// </summary>
     internal interface IIssueChangedSqServerEvent
     {
-        string ProjectKey { get; set; }
-        bool IsResolved { get; set; }
-        IImpactedIssue[] ImpactedIssues { get; set; }
+        string ProjectKey { get; }
+        bool IsResolved { get; }
+        IBranchAndIssueKey[] BranchAndIssueKeys { get; }
 
         // also has Severity and Type that we don't care about
     }
 
-    internal interface IImpactedIssue
+    /// <summary>
+    /// Tuple of the changed issue key in a specific branch
+    /// </summary>
+    internal interface IBranchAndIssueKey
     {
-        string BranchName { get; set; }
-        string IssueKey { get; set; }
+        string BranchName { get; }
+        string IssueKey { get; }
     }
 }
