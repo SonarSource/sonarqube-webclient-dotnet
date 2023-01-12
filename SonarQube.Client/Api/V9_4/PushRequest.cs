@@ -32,6 +32,8 @@ namespace SonarQube.Client.Api.V9_4
 {
     internal class PushRequest : RequestBase<Stream>, IPushRequest
     {
+        private static readonly string AllKnownLanguages = string.Join(",", SonarQubeLanguage.AllLanguages.Select(x => x.Key));
+
         protected override string Path => "api/push/sonarlint_events";
 
         protected override MediaTypeWithQualityHeaderValue[] Headers =>
@@ -53,8 +55,8 @@ namespace SonarQube.Client.Api.V9_4
             throw new InvalidOperationException();
         }
 
-        [JsonProperty("languages")]
-        public string Languages { get; set; } = string.Join(",", SonarQubeLanguage.AllLanguages.Select(x=> x.Key));
+        [JsonProperty("languages")] 
+        public string Languages { get; set; } = AllKnownLanguages;
 
         [JsonProperty("projectKeys")]
         public string ProjectKey { get; set; }
