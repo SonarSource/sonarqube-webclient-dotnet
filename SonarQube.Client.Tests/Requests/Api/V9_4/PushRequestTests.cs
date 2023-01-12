@@ -28,7 +28,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using Org.BouncyCastle.Crypto.IO;
 using SonarQube.Client.Api.V9_4;
 using SonarQube.Client.Logging;
 using SonarQube.Client.Tests.Infra;
@@ -42,8 +41,8 @@ namespace SonarQube.Client.Tests.Requests.Api.V9_4
         public async Task InvokeAsync_ReturnsCorrectStream()
         {
             using var testedStream = new MemoryStream(Encoding.UTF8.GetBytes("hello this is a test"));
-
             var messageHandler = new Mock<HttpMessageHandler>();
+            using var httpClient = new HttpClient(messageHandler.Object) { BaseAddress = new Uri("http://localhost") };
 
             MocksHelper.SetupHttpRequest(
                 messageHandler,
@@ -51,19 +50,15 @@ namespace SonarQube.Client.Tests.Requests.Api.V9_4
                 responseMessage: new HttpResponseMessage {Content = new StreamContent(testedStream) },
                 headers: MediaTypeHeaderValue.Parse("text/event-stream"));
 
-            using var httpClient = new HttpClient(messageHandler.Object) {BaseAddress = new Uri("http://localhost")};
-
             var testSubject = new PushRequest {Languages = "somelang", ProjectKey = "someproj", Logger = Mock.Of<ILogger>()};
 
             using var response = await testSubject.InvokeAsync(httpClient, CancellationToken.None);
             response.Should().NotBeNull();
+            messageHandler.VerifyAll();
 
             using var reader = new StreamReader(response, Encoding.UTF8);
             var responseString = await reader.ReadToEndAsync();
-
             responseString.Should().Be("hello this is a test");
-
-            messageHandler.VerifyAll();
         }
     }
 }
