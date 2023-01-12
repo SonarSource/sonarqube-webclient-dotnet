@@ -49,7 +49,7 @@ namespace SonarQube.Client.Requests
         protected virtual HttpMethod HttpMethod => HttpMethod.Get;
 
         [JsonIgnore]
-        protected virtual MediaTypeWithQualityHeaderValue[] Headers => Array.Empty<MediaTypeWithQualityHeaderValue>();
+        protected virtual MediaTypeWithQualityHeaderValue[] AllowedMediaTypeHeaders => Array.Empty<MediaTypeWithQualityHeaderValue>();
 
         [JsonIgnore]
         public ILogger Logger { get; set; }
@@ -92,7 +92,7 @@ namespace SonarQube.Client.Requests
 
             var httpRequest = new HttpRequestMessage(HttpMethod, new Uri(pathAndQuery, UriKind.Relative));
 
-            foreach (var header in Headers)
+            foreach (var header in AllowedMediaTypeHeaders)
             {
                 httpRequest.Headers.Accept.Add(header);
             }

@@ -418,7 +418,7 @@ namespace SonarQube.Client
 
         public async Task<IServerSentEventsSession> CreateServerSentEventsSession(string projectKey, CancellationToken token)
         {
-            var stream = await InvokeCheckedRequestAsync<IPushRequest, Stream>(
+            var stream = await InvokeCheckedRequestAsync<IGetSonarLintEventStream, Stream>(
                 request =>
                 {
                     request.ProjectKey = projectKey;

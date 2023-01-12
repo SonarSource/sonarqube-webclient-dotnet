@@ -35,7 +35,7 @@ using SonarQube.Client.Tests.Infra;
 namespace SonarQube.Client.Tests.Requests.Api.V9_4
 {
     [TestClass]
-    public class PushRequestTests
+    public class GetSonarLintEventStreamTests
     {
         [TestMethod]
         public async Task InvokeAsync_ReturnsCorrectStream()
@@ -50,7 +50,7 @@ namespace SonarQube.Client.Tests.Requests.Api.V9_4
                 responseMessage: new HttpResponseMessage {Content = new StreamContent(testedStream) },
                 headers: MediaTypeHeaderValue.Parse("text/event-stream"));
 
-            var testSubject = new PushRequest {ProjectKey = "someproj", Logger = Mock.Of<ILogger>()};
+            var testSubject = new GetSonarLintEventStream {ProjectKey = "someproj", Logger = Mock.Of<ILogger>()};
 
             using var response = await testSubject.InvokeAsync(httpClient, CancellationToken.None);
             response.Should().NotBeNull();

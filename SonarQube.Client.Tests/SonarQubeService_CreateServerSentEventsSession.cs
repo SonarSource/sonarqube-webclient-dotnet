@@ -59,7 +59,7 @@ namespace SonarQube.Client.Tests
             Func<Task<IServerSentEventsSession>> func = async () => await service.CreateServerSentEventsSession("myProject", CancellationToken.None);
 
             const string expectedErrorMessage =
-                "Could not find compatible implementation of 'IPushRequest' for SonarQube 3.3.0.0.";
+                "Could not find compatible implementation of 'IGetSonarLintEventStream' for SonarQube 3.3.0.0.";
 
             func.Should().ThrowExactly<InvalidOperationException>().WithMessage(expectedErrorMessage);
 

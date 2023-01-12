@@ -23,7 +23,7 @@ using SonarQube.Client.Requests;
 
 namespace SonarQube.Client.Api
 {
-    internal interface IPushRequest : IRequest<Stream>
+    internal interface IGetSonarLintEventStream : IRequest<Stream>
     {
         string Languages { get; set; }
         string ProjectKey { get; set; }

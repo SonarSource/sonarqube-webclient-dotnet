@@ -30,13 +30,13 @@ using SonarQube.Client.Requests;
 
 namespace SonarQube.Client.Api.V9_4
 {
-    internal class PushRequest : RequestBase<Stream>, IPushRequest
+    internal class GetSonarLintEventStream : RequestBase<Stream>, IGetSonarLintEventStream
     {
         private static readonly string AllKnownLanguages = string.Join(",", SonarQubeLanguage.AllLanguages.Select(x => x.Key));
 
         protected override string Path => "api/push/sonarlint_events";
 
-        protected override MediaTypeWithQualityHeaderValue[] Headers =>
+        protected override MediaTypeWithQualityHeaderValue[] AllowedMediaTypeHeaders =>
             new[]
             {
                 MediaTypeWithQualityHeaderValue.Parse("text/event-stream")
