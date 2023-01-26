@@ -114,7 +114,7 @@ data: some event data2
 
             result.Should().NotBeNull();
             result.Type.Should().Be("some event type");
-            result.Data.Should().Be("some event data1 some event data2");
+            result.Data.Should().Be("some event data1some event data2");
         }
 
         [TestMethod]
