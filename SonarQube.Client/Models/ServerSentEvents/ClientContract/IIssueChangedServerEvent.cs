@@ -33,6 +33,20 @@ namespace SonarQube.Client.Models.ServerSentEvents.ClientContract
         // also has Severity and Type that we don't care about
     }
 
+    public class IssueChangedServerEvent : IIssueChangedServerEvent
+    {
+        public IssueChangedServerEvent(string projectKey, bool isResolved, IBranchAndIssueKey[] branchAndIssueKeys)
+        {
+            ProjectKey = projectKey;
+            IsResolved = isResolved;
+            BranchAndIssueKeys = branchAndIssueKeys;
+        }
+
+        public string ProjectKey { get; }
+        public bool IsResolved { get; }
+        public IBranchAndIssueKey[] BranchAndIssueKeys { get; }
+    }
+
 
     /// <summary>
     /// Tuple of the changed issue key in a specific branch
@@ -41,5 +55,17 @@ namespace SonarQube.Client.Models.ServerSentEvents.ClientContract
     {
         string BranchName { get; }
         string IssueKey { get; }
+    }
+
+    public class BranchAndIssueKey : IBranchAndIssueKey
+    {
+        public BranchAndIssueKey(string issueKey, string branchName)
+        {
+            IssueKey = issueKey;
+            BranchName = branchName;
+        }
+
+        public string BranchName { get; }
+        public string IssueKey { get; }
     }
 }

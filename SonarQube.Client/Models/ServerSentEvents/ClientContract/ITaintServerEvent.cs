@@ -34,10 +34,36 @@ namespace SonarQube.Client.Models.ServerSentEvents.ClientContract
         string Branch { get; }
     }
 
+    public class TaintVulnerabilityRaisedServerEvent : ITaintVulnerabilityRaisedServerEvent
+    {
+        public TaintVulnerabilityRaisedServerEvent(string projectKey, string key, string branch)
+        {
+            ProjectKey = projectKey;
+            Key = key;
+            Branch = branch;
+        }
+
+        public string ProjectKey { get; }
+        public string Key { get; }
+        public string Branch { get; }
+    }
+
     /// <summary>
     /// Represents TaintVulnerabilityClosed server event information
     /// </summary>
     public interface ITaintVulnerabilityClosedServerEvent : ITaintServerEvent
     {
+    }
+
+    public class TaintVulnerabilityClosedServerEvent : ITaintVulnerabilityClosedServerEvent
+    {
+        public TaintVulnerabilityClosedServerEvent(string projectKey, string key)
+        {
+            ProjectKey = projectKey;
+            Key = key;
+        }
+
+        public string ProjectKey { get; }
+        public string Key { get; }
     }
 }
