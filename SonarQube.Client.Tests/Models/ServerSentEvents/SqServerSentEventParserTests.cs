@@ -18,6 +18,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+using System;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SonarQube.Client.Models.ServerSentEvents.ServerContract;
@@ -28,70 +29,98 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
     public class SqServerSentEventParserTests
     {
         [TestMethod]
-        [DataRow(null)]
-        [DataRow("")]
-        public void Parse_EmptyString_Null(string eventString)
+        public void Parse_NullEventLines_Null()
         {
             var testSubject = CreateTestSubject();
 
-            var result = testSubject.Parse(eventString);
+            var result = testSubject.Parse(null);
 
             result.Should().BeNull();
         }
 
         [TestMethod]
-        [DataRow(@"
-data: some data
-        ")] // no event type field
-        [DataRow(@"
-event: 
-data: some data
-        ")] // empty event type field
-        [DataRow(@"
-event : aaa
-data: some data
-        ")] // "event :" and not "event:"
-        public void Parse_InvalidEventType_Null(string eventString)
+        public void Parse_EmptyEventLines_Null()
         {
             var testSubject = CreateTestSubject();
 
-            var result = testSubject.Parse(eventString);
+            var result = testSubject.Parse(Array.Empty<string>());
 
             result.Should().BeNull();
         }
 
         [TestMethod]
-        [DataRow(@"
-event: some type
-        ")] // no event data field
-        [DataRow(@"
-event: some type
-data: 
-        ")] // empty data field
-        [DataRow(@"
-event: some type
-data : some data
-        ")] // "data :" and not "data:"
-        public void Parse_InvalidEventData_Null(string eventString)
+        public void Parse_InvalidEventType_MissingEventTypeField_Null()
         {
             var testSubject = CreateTestSubject();
 
-            var result = testSubject.Parse(eventString);
+            var result = testSubject.Parse(new[] {"data: some data"});
 
             result.Should().BeNull();
         }
+
+        [TestMethod]
+        public void Parse_InvalidEventType_EventTypeIsEmpty_Null()
+        {
+            var testSubject = CreateTestSubject();
+
+            var result = testSubject.Parse(new[] { "event: ", "data: some data"});
+
+            result.Should().BeNull();
+        }
+
+        [TestMethod]
+        public void Parse_InvalidEventType_EventTypeIsNotInCorrectFormat_Null()
+        {
+            var testSubject = CreateTestSubject();
+
+            var result = testSubject.Parse(new[] { "event : extra space", "data: some data" });
+
+            result.Should().BeNull();
+        }
+
+        [TestMethod]
+        public void Parse_InvalidEventData_MissingEventDataField_Null()
+        {
+            var testSubject = CreateTestSubject();
+
+            var result = testSubject.Parse(new[]{ "event: some type" });
+
+            result.Should().BeNull();
+        }
+
+        [TestMethod]
+        public void Parse_InvalidEventData_EventDataIsEmpty_Null()
+        {
+            var testSubject = CreateTestSubject();
+
+            var result = testSubject.Parse(new[] { "event: some type", "data: " });
+
+            result.Should().BeNull();
+        }
+
+        [TestMethod]
+        public void Parse_InvalidEventData_EventDataIsNotInCorrectFormat_Null()
+        {
+            var testSubject = CreateTestSubject();
+
+            var result = testSubject.Parse(new[] { "event: some type", "data : extra space" });
+
+            result.Should().BeNull();
+        }
+
 
         [TestMethod]
         public void Parse_CorrectEventString_ParsedEvent()
         {
-            const string eventString = @"
-event: some event type
-data: some event data
-            ";
+            var eventLines = new[]
+            {
+                "event: some event type",
+                "data: some event data"
+            };
 
             var testSubject = CreateTestSubject();
 
-            var result = testSubject.Parse(eventString);
+            var result = testSubject.Parse(eventLines);
 
             result.Should().NotBeNull();
             result.Type.Should().Be("some event type");
@@ -101,16 +130,17 @@ data: some event data
         [TestMethod]
         public void Parse_CorrectEventString_MultilineData_ParsedEvent()
         {
-            const string eventString = @"
-event: some event type
-data: some event data1
-data: 
-data: some event data2
-            ";
+            var eventLines = new[]
+            {
+                "event: some event type",
+                "data: some event data1",
+                "data: ",
+                "data: some event data2",
+            };
 
             var testSubject = CreateTestSubject();
 
-            var result = testSubject.Parse(eventString);
+            var result = testSubject.Parse(eventLines);
 
             result.Should().NotBeNull();
             result.Type.Should().Be("some event type");
@@ -120,27 +150,41 @@ data: some event data2
         [TestMethod]
         public void Parse_HasJunkFields_JunkFieldsIgnored()
         {
-            const string eventString = @"
-junk1: junk field1
-EVENT: junk event type
-event:
-event: some event type
-data: 
-data: some event data1
-junk2: junk field2
-DATA: junk data2
-data: some event data2
-junk3: junk field3
-            ";
+            var eventLines = new[]
+            {
+                "junk1: junk field1",
+                "EVENT: junk event type",
+                "event:",
+                "event: some event type",
+                "data: ",
+                "data: some event data1",
+                "junk2: junk field2",
+                "DATA: junk data2",
+                "data: some event data2",
+                "junk3: junk field3"
+            };
 
             var testSubject = CreateTestSubject();
 
-            var result = testSubject.Parse(eventString);
+            var result = testSubject.Parse(eventLines);
 
             result.Should().NotBeNull();
             result.Type.Should().Be("some event type");
             result.Data.Should().Be("some event data1some event data2");
         }
+
+        [TestMethod]
+        public void Parse_EventTypeIsNotTheFirstField_EventTypeIsStillParsedCorrectly()
+        {
+            var testSubject = CreateTestSubject();
+
+            var result = testSubject.Parse(new[] { "data: some data", "event: some type" });
+
+            result.Should().NotBeNull();
+            result.Type.Should().Be("some type");
+            result.Data.Should().Be("some data");
+        }
+
 
         private static SqServerSentEventParser CreateTestSubject() => new();
     }

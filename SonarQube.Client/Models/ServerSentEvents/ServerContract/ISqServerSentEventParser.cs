@@ -18,14 +18,14 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-using System.IO;
-using System.Text;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace SonarQube.Client.Models.ServerSentEvents.ServerContract
 {
     internal interface ISqServerSentEventParser
     {
-        ISqServerEvent Parse(string eventString);
+        ISqServerEvent Parse(IReadOnlyList<string> eventLines);
     }
 
     /// <summary>
@@ -39,36 +39,42 @@ namespace SonarQube.Client.Models.ServerSentEvents.ServerContract
         private const string EventTypeFieldPrefix = "event: ";
         private const string DataFieldPrefix = "data: ";
 
-        public ISqServerEvent Parse(string eventString)
+        public ISqServerEvent Parse(IReadOnlyList<string> eventLines)
         {
-            if (string.IsNullOrEmpty(eventString))
+            if (eventLines == null || !eventLines.Any())
             {
                 return null;
             }
 
-            var parsedEventType = "";
-            var parsedEventData = new StringBuilder();
+            var eventType = ParseEventType(eventLines);
+            var eventData = ParseEventData(eventLines);
 
-            var textReader = new StringReader(eventString);
-            string line;
-            while ((line = textReader.ReadLine()) != null)
-            {
-                if (line.StartsWith(EventTypeFieldPrefix))
-                {
-                    parsedEventType = line.Substring(EventTypeFieldPrefix.Length);
-                }
-                else if (line.StartsWith(DataFieldPrefix))
-                {
-                    parsedEventData.Append(line.Substring(DataFieldPrefix.Length));
-                }
-            }
-
-            if (string.IsNullOrEmpty(parsedEventType) || string.IsNullOrEmpty(parsedEventData.ToString()))
+            if (string.IsNullOrEmpty(eventType) || string.IsNullOrEmpty(eventData))
             {
                 return null;
             }
 
-            return new SqServerEvent(parsedEventType, parsedEventData.ToString());
+            return new SqServerEvent(eventType, eventData);
+        }
+
+        private string ParseEventType(IEnumerable<string> eventLines)
+        {
+            var eventType = eventLines
+                .FirstOrDefault(x => x.StartsWith(EventTypeFieldPrefix))
+                ?.Substring(EventTypeFieldPrefix.Length);
+
+            return eventType;
+        }
+
+        private string ParseEventData(IEnumerable<string> eventLines)
+        {
+            var validDataEventLines = eventLines
+                .Where(x => x.StartsWith(DataFieldPrefix))
+                .Select(x => x.Substring(DataFieldPrefix.Length));
+
+            var validEventData = string.Join("", validDataEventLines);
+
+            return validEventData;
         }
     }
 }
