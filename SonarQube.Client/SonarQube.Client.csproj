@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>net472</TargetFrameworks>
     <AssemblyName>SonarQube.Client</AssemblyName>
-    <LangVersion>6</LangVersion>
+    <LangVersion>latest</LangVersion>
     <RootNamespace>SonarQube.Client</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <RequiresSigning>true</RequiresSigning>

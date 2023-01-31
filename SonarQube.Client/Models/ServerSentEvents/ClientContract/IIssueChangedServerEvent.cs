@@ -19,6 +19,8 @@
  */
 
 
+using System;
+
 namespace SonarQube.Client.Models.ServerSentEvents.ClientContract
 {
     /// <summary>
@@ -37,9 +39,9 @@ namespace SonarQube.Client.Models.ServerSentEvents.ClientContract
     {
         public IssueChangedServerEvent(string projectKey, bool isResolved, IBranchAndIssueKey[] branchAndIssueKeys)
         {
-            ProjectKey = projectKey;
+            ProjectKey = projectKey ?? throw new ArgumentNullException(nameof(projectKey));
             IsResolved = isResolved;
-            BranchAndIssueKeys = branchAndIssueKeys;
+            BranchAndIssueKeys = branchAndIssueKeys ?? throw new ArgumentNullException(nameof(branchAndIssueKeys));
         }
 
         public string ProjectKey { get; }
@@ -61,8 +63,8 @@ namespace SonarQube.Client.Models.ServerSentEvents.ClientContract
     {
         public BranchAndIssueKey(string issueKey, string branchName)
         {
-            IssueKey = issueKey;
-            BranchName = branchName;
+            IssueKey = issueKey ?? throw new ArgumentNullException(nameof(issueKey));
+            BranchName = branchName ?? throw new ArgumentNullException(nameof(branchName));
         }
 
         public string BranchName { get; }
