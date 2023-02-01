@@ -18,30 +18,26 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-using System.IO;
-using System.Threading;
+using System;
 using System.Threading.Tasks;
 using SonarQube.Client.Models.ServerSentEvents.ClientContract;
 
 namespace SonarQube.Client.Models.ServerSentEvents
 {
     /// <summary>
-    /// Wraps the stream response from the server and reads from it
+    /// Wraps the stream response from the server, reads from it and converts it to <see cref="IServerEvent"/>
     /// </summary>
-    public interface IServerSentEventsSession
+    public interface ISSEStreamReader : IDisposable
     {
-        Task<IServerEvent> ReadAsync();
-    }
+        /// <summary>
+        /// Initialize the reader to begin pumping events. Will block the calling thread with an infinite loop.
+        /// </summary>
+        Task BeginListening();
 
-    internal class ServerSentEventsSession : IServerSentEventsSession
-    {
-        public ServerSentEventsSession(Stream stream, CancellationToken cancellationToken)
-        {
-        }
-
-        public Task<IServerEvent> ReadAsync()
-        {
-            throw new System.NotImplementedException();
-        }
+        /// <summary>
+        /// Will block the calling thread until an event exists or the connection is closed.
+        /// Can throw an exception if the event is not a valid <see cref="IServerEvent"/>
+        /// </summary>
+        Task<IServerEvent> GetNextEventOrNullAsync();
     }
 }

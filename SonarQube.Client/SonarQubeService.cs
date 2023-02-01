@@ -416,7 +416,7 @@ namespace SonarQube.Client
                     request.ProjectKey = projectKey;
                 }, token);
 
-        public async Task<IServerSentEventsSession> CreateServerSentEventsSession(string projectKey, CancellationToken token)
+        public async Task<ISSEStreamReader> CreateServerSentEventsStreamReader(string projectKey, CancellationToken token)
         {
             var stream = await InvokeCheckedRequestAsync<IGetSonarLintEventStream, Stream>(
                 request =>
@@ -425,7 +425,7 @@ namespace SonarQube.Client
                 },
                 token);
 
-            return new ServerSentEventsSession(stream, token);
+            return new SSEStreamReader(stream, token);
         }
 
         #region IDisposable Support

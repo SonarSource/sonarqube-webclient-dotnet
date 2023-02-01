@@ -32,10 +32,10 @@ using SonarQube.Client.Models.ServerSentEvents;
 namespace SonarQube.Client.Tests
 {
     [TestClass]
-    public class SonarQubeService_CreateServerSentEventsSession : SonarQubeService_TestBase
+    public class SonarQubeService_CreateServerSentEventsStreamReader : SonarQubeService_TestBase
     {
         [TestMethod]
-        public async Task CreateServerSentEventsSession_SupportedServerVersion_CreatesSession()
+        public async Task CreateServerSentEventsStreamReader_SupportedServerVersion_CreatesSession()
         {
             await ConnectToSonarQube("9.4.0.0");
 
@@ -46,17 +46,18 @@ namespace SonarQube.Client.Tests
                 },
                 MediaTypeHeaderValue.Parse("text/event-stream"));
 
-            var result = await service.CreateServerSentEventsSession("myProject", CancellationToken.None);
+            var result = await service.CreateServerSentEventsStreamReader("myProject", CancellationToken.None);
 
             result.Should().NotBeNull();
+            result.Should().BeOfType<SSEStreamReader>();
         }
 
         [TestMethod]
-        public async Task CreateServerSentEventsSession_UnsupportedServerVersion_InvalidOperationException()
+        public async Task CreateServerSentEventsStreamReader_UnsupportedServerVersion_InvalidOperationException()
         {
             await ConnectToSonarQube("3.3.0.0");
 
-            Func<Task<IServerSentEventsSession>> func = async () => await service.CreateServerSentEventsSession("myProject", CancellationToken.None);
+            Func<Task<ISSEStreamReader>> func = async () => await service.CreateServerSentEventsStreamReader("myProject", CancellationToken.None);
 
             const string expectedErrorMessage =
                 "Could not find compatible implementation of 'IGetSonarLintEventStream' for SonarQube 3.3.0.0.";
@@ -67,12 +68,12 @@ namespace SonarQube.Client.Tests
         }
 
         [TestMethod]
-        public void CreateServerSentEventsSession_NotConnected_InvalidOperationException()
+        public void CreateServerSentEventsStreamReader_NotConnected_InvalidOperationException()
         {
             // No calls to Connect
             // No need to setup request, the operation should fail
 
-            Func<Task<IServerSentEventsSession>> func = async () => await service.CreateServerSentEventsSession("myProject", CancellationToken.None);
+            Func<Task<ISSEStreamReader>> func = async () => await service.CreateServerSentEventsStreamReader("myProject", CancellationToken.None);
 
             func.Should().ThrowExactly<InvalidOperationException>()
                 .WithMessage("This operation expects the service to be connected.");
