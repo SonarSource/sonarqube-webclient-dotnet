@@ -64,30 +64,32 @@ namespace SonarQube.Client.Models.ServerSentEvents
 
         public async Task BeginListening()
         {
-            var eventLines = new List<string>();
+            // todo: next PR
+            throw new NotImplementedException();
+            //var eventLines = new List<string>();
 
-            using (var streamReader = new StreamReader(serverStream))
-            {
-                while (!streamReader.EndOfStream && !cancellationToken.IsCancellationRequested)
-                {
-                    var line = await streamReader.ReadLineAsync();
-                    var isPreviousLineALineBreak = eventLines.Last() == "\n";
-                    var isEventEnd = line == "\n" && isPreviousLineALineBreak;
-                    eventLines.Add(line);
+            //using (var streamReader = new StreamReader(serverStream))
+            //{
+            //    while (!streamReader.EndOfStream && !cancellationToken.IsCancellationRequested)
+            //    {
+            //        var line = await streamReader.ReadLineAsync();
+            //        var isPreviousLineALineBreak = eventLines.Last() == "\n";
+            //        var isEventEnd = line == "\n" && isPreviousLineALineBreak;
+            //        eventLines.Add(line);
 
-                    if (isEventEnd)
-                    {
-                        var parsedEvent = sqServerSentEventParser.Parse(eventLines);
-                        await sqEventsChannel.WriteAsync(parsedEvent, cancellationToken);
-                        eventLines.Clear();
-                    }
-                }
-            }
+            //        if (isEventEnd)
+            //        {
+            //            var parsedEvent = sqServerSentEventParser.Parse(eventLines);
+            //            await sqEventsChannel.WriteAsync(parsedEvent, cancellationToken);
+            //            eventLines.Clear();
+            //        }
+            //    }
+            //}
         }
 
         public void Dispose()
         {
-            sqEventsChannel?.Complete();
+            sqEventsChannel.Complete();
         }
     }
 }
