@@ -23,24 +23,25 @@ using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SonarQube.Client.Models.ServerSentEvents.ClientContract;
 
-namespace SonarQube.Client.Tests.Models.ServerSentEvents;
-
-[TestClass]
-public class BranchAndIssueKeyTests
+namespace SonarQube.Client.Tests.Models.ServerSentEvents
 {
-    [TestMethod]
-    public void Ctor_InvalidKey_Throws()
+    [TestClass]
+    public class BranchAndIssueKeyTests
     {
-        Action act = () => { new BranchAndIssueKey(null, "main"); };
+        [TestMethod]
+        public void Ctor_InvalidKey_Throws()
+        {
+            Action act = () => { new BranchAndIssueKey(null, "main"); };
 
-        act.Should().ThrowExactly<ArgumentNullException>().And.ParamName.Should().Be("issueKey");
-    }
+            act.Should().ThrowExactly<ArgumentNullException>().And.ParamName.Should().Be("issueKey");
+        }
 
-    [TestMethod]
-    public void Ctor_InvalidBranch_Throws()
-    {
-        Action act = () => { new BranchAndIssueKey("id1", null); };
+        [TestMethod]
+        public void Ctor_InvalidBranch_Throws()
+        {
+            Action act = () => { new BranchAndIssueKey("id1", null); };
 
-        act.Should().ThrowExactly<ArgumentNullException>().And.ParamName.Should().Be("branchName");
+            act.Should().ThrowExactly<ArgumentNullException>().And.ParamName.Should().Be("branchName");
+        }
     }
 }
