@@ -19,13 +19,11 @@
  */
 
 using System;
-using System.IO;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 using SonarQube.Client.Models.ServerSentEvents;
 using SonarQube.Client.Models.ServerSentEvents.ClientContract;
 using SonarQube.Client.Models.ServerSentEvents.ServerContract;
@@ -120,18 +118,9 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
             return channel;
         }
 
-        private SSEStreamReader CreateTestSubject(
-            ISqServerSentEventParser sqServerSentEventParser = null,
-            Stream serverStream = null,
-            CancellationToken? cancellationToken = null,
-            Channel<ISqServerEvent> sqEventsChannel = null)
+        private SSEStreamReader CreateTestSubject(Channel<ISqServerEvent> sqEventsChannel)
         {
-            sqServerSentEventParser ??= Mock.Of<ISqServerSentEventParser>();
-            serverStream ??= Mock.Of<Stream>();
-            cancellationToken ??= CancellationToken.None;
-            sqEventsChannel ??= Mock.Of<Channel<ISqServerEvent>>();
-
-            return new SSEStreamReader(serverStream, cancellationToken.Value, sqServerSentEventParser, sqEventsChannel);
+            return new SSEStreamReader(sqEventsChannel, CancellationToken.None);
         }
     }
 }
