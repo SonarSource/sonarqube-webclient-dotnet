@@ -32,6 +32,23 @@ using SonarQube.Client.Models.ServerSentEvents.ServerContract;
 namespace SonarQube.Client.Models.ServerSentEvents
 {
     /// <summary>
+    /// Wraps the stream response from the server, reads from it and converts it to <see cref="IServerEvent"/>
+    /// </summary>
+    public interface ISSEStreamReader : IDisposable
+    {
+        /// <summary>
+        /// Initialize the reader to begin pumping events. Will block the calling thread with an infinite loop.
+        /// </summary>
+        Task BeginListening();
+
+        /// <summary>
+        /// Will block the calling thread until an event exists or the connection is closed.
+        /// Can throw an exception if the event is not a valid <see cref="IServerEvent"/>
+        /// </summary>
+        Task<IServerEvent> GetNextEventOrNullAsync();
+    }
+
+    /// <summary>
     /// Returns <see cref="IServerEvent"/> deserialized from <see cref="ISqServerEvent"/>
     /// Code on the java side: https://github.com/SonarSource/sonarlint-core/blob/4f34c7c844b12e331a61c63ad7105acac41d2efd/server-api/src/main/java/org/sonarsource/sonarlint/core/serverapi/push/PushApi.java
     /// </summary>
@@ -50,19 +67,19 @@ namespace SonarQube.Client.Models.ServerSentEvents
         };
 
         public SSEStreamReader(Stream serverStream, CancellationToken cancellationToken)
-            : this(serverStream, cancellationToken, new SqServerSentEventParser())
+            : this(serverStream, cancellationToken, new SqServerSentEventParser(), Channel.CreateUnbounded<ISqServerEvent>())
         {
         }
 
         internal SSEStreamReader(Stream serverStream,
             CancellationToken cancellationToken,
-            ISqServerSentEventParser sqServerSentEventParser)
+            ISqServerSentEventParser sqServerSentEventParser,
+            Channel<ISqServerEvent> sqEventsChannel)
         {
             this.serverStream = serverStream;
             this.cancellationToken = cancellationToken;
             this.sqServerSentEventParser = sqServerSentEventParser;
-
-            sqEventsChannel = Channel.CreateUnbounded<ISqServerEvent>();
+            this.sqEventsChannel = sqEventsChannel;
         }
 
         public async Task BeginListening()
