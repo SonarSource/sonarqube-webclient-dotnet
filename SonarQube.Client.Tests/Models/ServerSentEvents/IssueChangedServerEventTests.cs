@@ -33,13 +33,13 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
         {
             Action act = () => { new IssueChangedServerEvent("MyProject", false, null); };
 
-            act.Should().ThrowExactly<ArgumentNullException>().And.ParamName.Should().Be("branchAndIssueKeys");
+            act.Should().ThrowExactly<ArgumentNullException>().And.ParamName.Should().Be("issues");
         }
 
         [TestMethod]
         public void Ctor_InvalidProjectKey_Throws()
         {
-            Action act = () => { new IssueChangedServerEvent(null, false, new IBranchAndIssueKey[]{new BranchAndIssueKey("i", "b")}); };
+            Action act = () => { new IssueChangedServerEvent(null, false, new[]{new BranchAndIssueKey("i", "b")}); };
 
             act.Should().ThrowExactly<ArgumentNullException>().And.ParamName.Should().Be("projectKey");
         }

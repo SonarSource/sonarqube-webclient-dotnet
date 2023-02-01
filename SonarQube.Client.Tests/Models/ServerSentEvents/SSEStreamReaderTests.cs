@@ -55,7 +55,7 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
 
             var testSubject = CreateTestSubject(sqEventsChannel: channel);
 
-            Func<Task<IServerEvent>> func = async () => await testSubject.GetNextEventOrNullAsync();;
+            Func<Task<IServerEvent>> func = async () => await testSubject.GetNextEventOrNullAsync();
 
             func.Should().ThrowExactly<NotSupportedException>().And.Message.Should().Contain("some type 111");
         }
@@ -67,9 +67,24 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
 
             var testSubject = CreateTestSubject(sqEventsChannel: channel);
 
-            Func<Task<IServerEvent>> func = async () => await testSubject.GetNextEventOrNullAsync(); ;
+            Func<Task<IServerEvent>> func = async () => await testSubject.GetNextEventOrNullAsync();
 
             func.Should().ThrowExactly<JsonReaderException>();
+        }
+
+        [TestMethod, Description("Missing mandatory 'branchName' field")]
+        public void GetNextEventOrNullAsync_IssueChangedEventType_MissingMandatoryFields_ArgumentNullException()
+        {
+            const string serializedIssueChangedEvent =
+                "{\"projectKey\": \"projectKey1\",\"issues\": [{\"issueKey\": \"key1\"}],\"resolved\": \"true\"}";
+
+            var channel = CreateChannel(new SqServerEvent("IssueChanged", serializedIssueChangedEvent));
+
+            var testSubject = CreateTestSubject(sqEventsChannel: channel);
+
+            Func<Task<IServerEvent>> func = async () => await testSubject.GetNextEventOrNullAsync();
+
+            func.Should().ThrowExactly<ArgumentNullException>().And.ParamName.Should().Be("branchName");
         }
 
         [TestMethod]
@@ -85,7 +100,12 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
             var result = await testSubject.GetNextEventOrNullAsync();
 
             result.Should().NotBeNull();
-            result.Should().BeOfType<IIssueChangedServerEvent>();
+            result.Should().BeOfType<IssueChangedServerEvent>();
+            result.Should().BeEquivalentTo(
+                new IssueChangedServerEvent(
+                    projectKey: "projectKey1",
+                    isResolved: true,
+                    issues: new[] { new BranchAndIssueKey("key1", "master") }));
         }
 
         private Channel<ISqServerEvent> CreateChannel(params ISqServerEvent[] events)
