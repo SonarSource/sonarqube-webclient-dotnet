@@ -58,6 +58,20 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
             result.Should().Be(readerTask);
         }
 
+        [TestMethod]
+        public void Dispose_DisposesWriter()
+        {
+            var writer = new Mock<ISSEStreamWriter>();
+
+            var testSubject = CreateTestSubject(writer: writer.Object);
+
+            writer.Verify(x=> x.Dispose(), Times.Never);
+
+            testSubject.Dispose();
+
+            writer.Verify(x => x.Dispose(), Times.Once);
+        }
+
         private SSEStream CreateTestSubject(ISSEStreamReader reader = null, ISSEStreamWriter writer = null) 
             => new(reader, writer);
     }
