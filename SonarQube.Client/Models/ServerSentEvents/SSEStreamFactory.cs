@@ -45,7 +45,7 @@ namespace SonarQube.Client.Models.ServerSentEvents
             var channel = Channel.CreateUnbounded<ISqServerEvent>();
 
             var reader = new SSEStreamReader(channel.Reader, cancellationToken, logger);
-            var writer = new SSEStreamWriter(stream, channel.Writer, cancellationToken);
+            var writer = new SSEStreamWriter(new StreamReader(stream), channel.Writer, cancellationToken);
 
             return new SSEStream(reader, writer);
         }
