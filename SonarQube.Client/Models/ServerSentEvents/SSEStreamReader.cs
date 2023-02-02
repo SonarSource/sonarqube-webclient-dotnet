@@ -47,7 +47,7 @@ namespace SonarQube.Client.Models.ServerSentEvents
         private readonly ChannelReader<ISqServerEvent> sqEventsChannel;
         private readonly CancellationToken cancellationToken;
 
-        private IDictionary<string, Type> eventConverters = new Dictionary<string, Type>
+        private readonly IDictionary<string, Type> eventConverters = new Dictionary<string, Type>
         {
             {"IssueChanged", typeof(IssueChangedServerEvent)},
             // todo: support later

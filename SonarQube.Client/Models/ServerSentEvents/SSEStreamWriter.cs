@@ -19,9 +19,7 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Channels;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,7 +30,7 @@ namespace SonarQube.Client.Models.ServerSentEvents
     public interface ISSEStreamWriter : IDisposable
     {
         /// <summary>
-        /// Initialize the reader to begin pumping events. Will block the calling thread with an infinite loop.
+        /// Begin pumping events. Will block the calling thread with an infinite loop.
         /// </summary>
         Task BeginListening();
     }
@@ -62,29 +60,10 @@ namespace SonarQube.Client.Models.ServerSentEvents
             this.sqServerSentEventParser = sqServerSentEventParser;
         }
 
-        public async Task BeginListening()
+        public Task BeginListening()
         {
             // todo: next PR
             throw new NotImplementedException();
-            //var eventLines = new List<string>();
-
-            //using (var streamReader = new StreamReader(serverStream))
-            //{
-            //    while (!streamReader.EndOfStream && !cancellationToken.IsCancellationRequested)
-            //    {
-            //        var line = await streamReader.ReadLineAsync();
-            //        var isPreviousLineALineBreak = eventLines.Last() == "\n";
-            //        var isEventEnd = line == "\n" && isPreviousLineALineBreak;
-            //        eventLines.Add(line);
-
-            //        if (isEventEnd)
-            //        {
-            //            var parsedEvent = sqServerSentEventParser.Parse(eventLines);
-            //            await sqEventsChannel.WriteAsync(parsedEvent, cancellationToken);
-            //            eventLines.Clear();
-            //        }
-            //    }
-            //}
         }
 
         public void Dispose()

@@ -35,7 +35,7 @@ namespace SonarQube.Client.Models.ServerSentEvents
     {
     }
 
-    internal class SSEStream : ISSEStream
+    internal sealed class SSEStream : ISSEStream
     {
         private readonly ISSEStreamReader streamReader;
         private readonly ISSEStreamWriter streamWriter;
