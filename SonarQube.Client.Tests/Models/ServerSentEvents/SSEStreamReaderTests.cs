@@ -24,10 +24,13 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using SonarQube.Client.Models.ServerSentEvents;
 using SonarQube.Client.Models.ServerSentEvents.ClientContract;
 using SonarQube.Client.Models.ServerSentEvents.ServerContract;
 using Newtonsoft.Json;
+using SonarQube.Client.Logging;
+using SonarQube.Client.Tests.Infra;
 
 namespace SonarQube.Client.Tests.Models.ServerSentEvents
 {
@@ -60,30 +63,43 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
         }
 
         [TestMethod]
-        public void GetNextEventOrNullAsync_FailureToDeserializeTheEventData_Exception()
+        public async Task GetNextEventOrNullAsync_FailureToDeserializeTheEventData_ExceptionLoggedAndNullReturned()
         {
             var channel = CreateChannelWithEvents(new SqServerEvent("IssueChanged", "some invalid data"));
+            var logger = new TestLogger();
 
-            var testSubject = CreateTestSubject(sqEventsChannel: channel);
+            var testSubject = CreateTestSubject(sqEventsChannel: channel, logger);
 
-            Func<Task<IServerEvent>> func = async () => await testSubject.GetNextEventOrNullAsync();
+            var result = await testSubject.GetNextEventOrNullAsync();
 
-            func.Should().ThrowExactly<JsonReaderException>();
+            result.Should().BeNull();
+
+            logger.DebugMessages.Should().Contain(x =>
+                x.Contains(nameof(JsonReaderException)) &&
+                x.Contains("IssueChanged") &&
+                x.Contains("some invalid data"));
         }
 
         [TestMethod, Description("Missing mandatory 'branchName' field")]
-        public void GetNextEventOrNullAsync_IssueChangedEventType_MissingMandatoryFields_ArgumentNullException()
+        public async Task GetNextEventOrNullAsync_IssueChangedEventType_MissingMandatoryFields_ExceptionLoggedAndNullReturned()
         {
             const string serializedIssueChangedEvent =
                 "{\"projectKey\": \"projectKey1\",\"issues\": [{\"issueKey\": \"key1\"}],\"resolved\": \"true\"}";
 
             var channel = CreateChannelWithEvents(new SqServerEvent("IssueChanged", serializedIssueChangedEvent));
+            var logger = new TestLogger();
 
-            var testSubject = CreateTestSubject(sqEventsChannel: channel);
+            var testSubject = CreateTestSubject(sqEventsChannel: channel, logger);
 
-            Func<Task<IServerEvent>> func = async () => await testSubject.GetNextEventOrNullAsync();
+            var result = await testSubject.GetNextEventOrNullAsync();
 
-            func.Should().ThrowExactly<ArgumentNullException>().And.ParamName.Should().Be("branchName");
+            result.Should().BeNull();
+
+            logger.DebugMessages.Should().Contain(x =>
+                x.Contains(nameof(ArgumentNullException)) &&
+                x.Contains("branchName") &&
+                x.Contains("IssueChanged") &&
+                x.Contains("projectKey1"));
         }
 
         [TestMethod]
@@ -119,9 +135,11 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
             return channel;
         }
 
-        private SSEStreamReader CreateTestSubject(Channel<ISqServerEvent> sqEventsChannel)
+        private SSEStreamReader CreateTestSubject(Channel<ISqServerEvent> sqEventsChannel, ILogger logger = null)
         {
-            return new SSEStreamReader(sqEventsChannel, CancellationToken.None);
+            logger ??= Mock.Of<ILogger>();
+
+            return new SSEStreamReader(sqEventsChannel, CancellationToken.None, logger);
         }
     }
 }

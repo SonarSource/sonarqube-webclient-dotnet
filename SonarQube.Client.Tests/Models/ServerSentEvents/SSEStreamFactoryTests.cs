@@ -22,6 +22,8 @@ using System.IO;
 using System.Threading;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
+using SonarQube.Client.Logging;
 using SonarQube.Client.Models.ServerSentEvents;
 
 namespace SonarQube.Client.Tests.Models.ServerSentEvents
@@ -32,7 +34,7 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
         [TestMethod]
         public void Create_CreatesSSEStream()
         {
-            var sseStreamFactory = new SSEStreamFactory();
+            var sseStreamFactory = new SSEStreamFactory(Mock.Of<ILogger>());
 
             var sseStream = sseStreamFactory.Create(Stream.Null, CancellationToken.None);
 

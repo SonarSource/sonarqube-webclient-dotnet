@@ -62,7 +62,7 @@ namespace SonarQube.Client
         public ServerInfo GetServerInfo() => currentServerInfo;
 
         public SonarQubeService(HttpMessageHandler messageHandler, string userAgent, ILogger logger)
-            : this(messageHandler, userAgent, logger, new RequestFactorySelector(), new SecondaryLocationHashUpdater(), new SSEStreamFactory())
+            : this(messageHandler, userAgent, logger, new RequestFactorySelector(), new SecondaryLocationHashUpdater(), new SSEStreamFactory(logger))
         {
         }
 

@@ -26,6 +26,7 @@ using SonarQube.Client.Models.ServerSentEvents.ClientContract;
 using SonarQube.Client.Models.ServerSentEvents.ServerContract;
 using System.Collections.Generic;
 using System.Threading.Channels;
+using SonarQube.Client.Logging;
 
 namespace SonarQube.Client.Models.ServerSentEvents
 {
@@ -46,6 +47,7 @@ namespace SonarQube.Client.Models.ServerSentEvents
     {
         private readonly ChannelReader<ISqServerEvent> sqEventsChannel;
         private readonly CancellationToken cancellationToken;
+        private readonly ILogger logger;
 
         private readonly IDictionary<string, Type> eventConverters = new Dictionary<string, Type>
         {
@@ -55,9 +57,10 @@ namespace SonarQube.Client.Models.ServerSentEvents
             // {"TaintVulnerabilityRaised", typeof(TaintVulnerabilityRaisedServerEvent)}
         };
 
-        public SSEStreamReader(ChannelReader<ISqServerEvent> sqEventsChannel, CancellationToken cancellationToken)
+        public SSEStreamReader(ChannelReader<ISqServerEvent> sqEventsChannel, CancellationToken cancellationToken, ILogger logger)
         {
             this.cancellationToken = cancellationToken;
+            this.logger = logger;
             this.sqEventsChannel = sqEventsChannel;
         }
 
@@ -75,9 +78,21 @@ namespace SonarQube.Client.Models.ServerSentEvents
                 return null;
             }
 
-            var deserializedEvent = JsonConvert.DeserializeObject(sqEvent.Data, eventConverters[sqEvent.Type]);
+            try
+            {
+                var deserializedEvent = JsonConvert.DeserializeObject(sqEvent.Data, eventConverters[sqEvent.Type]);
 
-            return (IServerEvent)deserializedEvent;
+                return (IServerEvent) deserializedEvent;
+            }
+            catch (Exception ex)
+            {
+                logger.Debug("[SSEStreamReader] Failed to deserialize sq event." +
+                             $"\n Exception: {ex}" +
+                             $"\n Raw event type: {sqEvent.Type}" +
+                             $"\n Raw event data: {sqEvent.Data}");
+
+                return null;
+            }
         }
     }
 }

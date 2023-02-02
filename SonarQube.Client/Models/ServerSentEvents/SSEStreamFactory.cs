@@ -22,6 +22,7 @@ using System.IO;
 using System.Threading;
 using SonarQube.Client.Models.ServerSentEvents.ServerContract;
 using System.Threading.Channels;
+using SonarQube.Client.Logging;
 
 namespace SonarQube.Client.Models.ServerSentEvents
 {
@@ -32,11 +33,18 @@ namespace SonarQube.Client.Models.ServerSentEvents
 
     internal class SSEStreamFactory : ISSEStreamFactory
     {
+        private readonly ILogger logger;
+
+        public SSEStreamFactory(ILogger logger)
+        {
+            this.logger = logger;
+        }
+
         public ISSEStream Create(Stream stream, CancellationToken cancellationToken)
         {
             var channel = Channel.CreateUnbounded<ISqServerEvent>();
 
-            var reader = new SSEStreamReader(channel.Reader, cancellationToken);
+            var reader = new SSEStreamReader(channel.Reader, cancellationToken, logger);
             var writer = new SSEStreamWriter(stream, channel.Writer, cancellationToken);
 
             return new SSEStream(reader, writer);
