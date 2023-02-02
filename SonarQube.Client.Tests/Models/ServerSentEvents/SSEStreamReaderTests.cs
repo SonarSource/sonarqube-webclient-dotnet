@@ -47,15 +47,16 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
         }
 
         [TestMethod]
-        public void GetNextEventOrNullAsync_UnrecognizedEventType_NotSupportedException()
+        [Description("SQ stream events that we do not support yet. We need to ignore them.")]
+        public async Task GetNextEventOrNullAsync_UnrecognizedEventType_NullReturned()
         {
             var channel = CreateChannel(new SqServerEvent("some type 111", "some data"));
 
             var testSubject = CreateTestSubject(sqEventsChannel: channel);
 
-            Func<Task<IServerEvent>> func = async () => await testSubject.GetNextEventOrNullAsync();
+            var result = await testSubject.GetNextEventOrNullAsync();
 
-            func.Should().ThrowExactly<NotSupportedException>().And.Message.Should().Contain("some type 111");
+            result.Should().BeNull();
         }
 
         [TestMethod]

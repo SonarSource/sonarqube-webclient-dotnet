@@ -72,7 +72,7 @@ namespace SonarQube.Client.Models.ServerSentEvents
 
             if (!eventConverters.ContainsKey(sqEvent.Type))
             {
-                throw new NotSupportedException($"Unknown ServerEventType: {sqEvent.Type}");
+                return null;
             }
 
             var deserializedEvent = JsonConvert.DeserializeObject(sqEvent.Data, eventConverters[sqEvent.Type]);
