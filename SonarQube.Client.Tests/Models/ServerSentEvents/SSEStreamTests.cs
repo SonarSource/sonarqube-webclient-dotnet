@@ -49,19 +49,16 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
         }
 
         [TestMethod]
-        public void GetNextEventOrNullAsync_CallsReader()
+        public async Task GetNextEventOrNullAsync_CallsReader()
         {
-            var readerTask = Task.FromResult(Mock.Of<IServerEvent>());
             var reader = new Mock<ISSEStreamReader>();
-            reader.Setup(x => x.GetNextEventOrNullAsync()).Returns(readerTask);
+            reader.Setup(x => x.GetNextEventOrNullAsync()).ReturnsAsync(Mock.Of<IServerEvent>());
 
             var testSubject = CreateTestSubject(reader: reader.Object);
 
             reader.Verify(x => x.GetNextEventOrNullAsync(), Times.Never);
 
-            var result = testSubject.GetNextEventOrNullAsync();
-
-            result.Should().Be(readerTask);
+            var result = await testSubject.GetNextEventOrNullAsync();
 
             reader.Verify(x => x.GetNextEventOrNullAsync(), Times.Once);
         }
