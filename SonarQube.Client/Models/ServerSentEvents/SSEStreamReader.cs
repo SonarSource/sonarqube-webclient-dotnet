@@ -68,12 +68,7 @@ namespace SonarQube.Client.Models.ServerSentEvents
         {
             var sqEvent = await sqEventsChannel.ReadAsync(cancellationToken);
 
-            if (sqEvent == null)
-            {
-                return null;
-            }
-
-            if (!eventConverters.ContainsKey(sqEvent.Type))
+            if (sqEvent == null || !eventConverters.ContainsKey(sqEvent.Type))
             {
                 return null;
             }
