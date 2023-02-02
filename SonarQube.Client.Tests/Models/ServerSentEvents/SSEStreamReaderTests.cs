@@ -37,7 +37,7 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
         [TestMethod]
         public async Task GetNextEventOrNullAsync_Null_NullReturned()
         {
-            var channel = CreateChannel((ISqServerEvent) null);
+            var channel = CreateChannelWithEvents((ISqServerEvent) null);
 
             var testSubject = CreateTestSubject(sqEventsChannel: channel);
 
@@ -50,7 +50,7 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
         [Description("SQ stream events that we do not support yet. We need to ignore them.")]
         public async Task GetNextEventOrNullAsync_UnrecognizedEventType_NullReturned()
         {
-            var channel = CreateChannel(new SqServerEvent("some type 111", "some data"));
+            var channel = CreateChannelWithEvents(new SqServerEvent("some type 111", "some data"));
 
             var testSubject = CreateTestSubject(sqEventsChannel: channel);
 
@@ -62,7 +62,7 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
         [TestMethod]
         public void GetNextEventOrNullAsync_FailureToDeserializeTheEventData_Exception()
         {
-            var channel = CreateChannel(new SqServerEvent("IssueChanged", "some invalid data"));
+            var channel = CreateChannelWithEvents(new SqServerEvent("IssueChanged", "some invalid data"));
 
             var testSubject = CreateTestSubject(sqEventsChannel: channel);
 
@@ -77,7 +77,7 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
             const string serializedIssueChangedEvent =
                 "{\"projectKey\": \"projectKey1\",\"issues\": [{\"issueKey\": \"key1\"}],\"resolved\": \"true\"}";
 
-            var channel = CreateChannel(new SqServerEvent("IssueChanged", serializedIssueChangedEvent));
+            var channel = CreateChannelWithEvents(new SqServerEvent("IssueChanged", serializedIssueChangedEvent));
 
             var testSubject = CreateTestSubject(sqEventsChannel: channel);
 
@@ -92,7 +92,7 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
             const string serializedIssueChangedEvent =
                 "{\"projectKey\": \"projectKey1\",\"issues\": [{\"issueKey\": \"key1\",\"branchName\": \"master\"}],\"resolved\": \"true\"}";
 
-            var channel = CreateChannel(new SqServerEvent("IssueChanged", serializedIssueChangedEvent));
+            var channel = CreateChannelWithEvents(new SqServerEvent("IssueChanged", serializedIssueChangedEvent));
 
             var testSubject = CreateTestSubject(sqEventsChannel: channel);
 
@@ -107,7 +107,7 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
                     issues: new[] { new BranchAndIssueKey("key1", "master") }));
         }
 
-        private Channel<ISqServerEvent> CreateChannel(params ISqServerEvent[] events)
+        private Channel<ISqServerEvent> CreateChannelWithEvents(params ISqServerEvent[] events)
         {
             var channel = Channel.CreateUnbounded<ISqServerEvent>();
 

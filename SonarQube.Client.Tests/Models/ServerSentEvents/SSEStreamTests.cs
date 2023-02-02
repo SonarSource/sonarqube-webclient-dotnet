@@ -39,9 +39,13 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
 
             var testSubject = CreateTestSubject(writer: writer.Object);
 
+            writer.Verify(x => x.BeginListening(), Times.Never);
+
             var result = testSubject.BeginListening();
 
             result.Should().Be(writerTask);
+
+            writer.Verify(x=> x.BeginListening(), Times.Once);
         }
 
         [TestMethod]
@@ -53,9 +57,13 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
 
             var testSubject = CreateTestSubject(reader: reader.Object);
 
+            reader.Verify(x => x.GetNextEventOrNullAsync(), Times.Never);
+
             var result = testSubject.GetNextEventOrNullAsync();
 
             result.Should().Be(readerTask);
+
+            reader.Verify(x => x.GetNextEventOrNullAsync(), Times.Once);
         }
 
         [TestMethod]
