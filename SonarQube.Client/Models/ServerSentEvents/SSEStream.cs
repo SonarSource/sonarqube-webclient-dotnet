@@ -29,7 +29,7 @@ namespace SonarQube.Client.Models.ServerSentEvents
     /// <remarks>
     /// Aggregate interface for SLVS.
     /// SLVS should be the one to decide on which thread <see cref="ISSEStreamWriter.BeginListening"/> and
-    /// <see cref="ISSEStreamReader.GetNextEventOrNullAsync"/> will run.
+    /// <see cref="ISSEStreamReader.ReadAsync"/> will run.
     /// </remarks>
     public interface ISSEStream : ISSEStreamReader, ISSEStreamWriter
     {
@@ -51,9 +51,9 @@ namespace SonarQube.Client.Models.ServerSentEvents
             return streamWriter.BeginListening();
         }
 
-        public Task<IServerEvent> GetNextEventOrNullAsync()
+        public Task<IServerEvent> ReadAsync()
         {
-            return streamReader.GetNextEventOrNullAsync();
+            return streamReader.ReadAsync();
         }
 
         public void Dispose()
