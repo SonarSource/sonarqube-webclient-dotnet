@@ -95,7 +95,7 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
         }
 
         [TestMethod, Description("Missing mandatory 'branchName' field")]
-        public async Task GetNextEventOrNullAsync_IssueChangedEventType_MissingMandatoryFields_ExceptionLoggedAndNullReturned()
+        public async Task GetNextEventOrNullAsync_MissingMandatoryFieldsInAnEvent_ExceptionLoggedAndNullReturned()
         {
             const string serializedIssueChangedEvent =
                 "{\"projectKey\": \"projectKey1\",\"issues\": [{\"issueKey\": \"key1\"}],\"resolved\": \"true\"}";
@@ -135,6 +135,47 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
                     projectKey: "projectKey1",
                     isResolved: true,
                     issues: new[] { new BranchAndIssueKey("key1", "master") }));
+        }
+
+        [TestMethod]
+        public async Task GetNextEventOrNullAsync_TaintVulnerabilityClosedEventType_DeserializedEvent()
+        {
+            const string serializedTaintVulnerabilityClosedEvent =
+                "{\"projectKey\": \"projectKey1\",\"key\": \"taintKey\"}";
+
+            var channel = CreateChannelWithEvents(new SqServerEvent("TaintVulnerabilityClosed", serializedTaintVulnerabilityClosedEvent));
+
+            var testSubject = CreateTestSubject(sqEventsChannel: channel);
+
+            var result = await testSubject.GetNextEventOrNullAsync();
+
+            result.Should().NotBeNull();
+            result.Should().BeOfType<TaintVulnerabilityClosedServerEvent>();
+            result.Should().BeEquivalentTo(
+                new TaintVulnerabilityClosedServerEvent(
+                    projectKey: "projectKey1",
+                    key: "taintKey"));
+        }
+
+        [TestMethod]
+        public async Task GetNextEventOrNullAsync_TaintVulnerabilityRaisedEventType_DeserializedEvent()
+        {
+            const string serializedTaintVulnerabilityRaisedEvent =
+                "{\"key\": \"taintKey\",\"projectKey\": \"projectKey1\",\"branch\": \"master\" }";
+
+            var channel = CreateChannelWithEvents(new SqServerEvent("TaintVulnerabilityRaised", serializedTaintVulnerabilityRaisedEvent));
+
+            var testSubject = CreateTestSubject(sqEventsChannel: channel);
+
+            var result = await testSubject.GetNextEventOrNullAsync();
+
+            result.Should().NotBeNull();
+            result.Should().BeOfType<TaintVulnerabilityRaisedServerEvent>();
+            result.Should().BeEquivalentTo(
+                new TaintVulnerabilityRaisedServerEvent(
+                    projectKey: "projectKey1",
+                    key: "taintKey",
+                    branch: "master"));
         }
 
         private Channel<ISqServerEvent> CreateChannelWithEvents(params ISqServerEvent[] events)

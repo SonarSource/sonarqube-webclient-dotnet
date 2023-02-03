@@ -52,9 +52,8 @@ namespace SonarQube.Client.Models.ServerSentEvents
         private readonly IDictionary<string, Type> eventConverters = new Dictionary<string, Type>
         {
             {"IssueChanged", typeof(IssueChangedServerEvent)},
-            // todo: support later
-            // {"TaintVulnerabilityClosed", typeof(TaintVulnerabilityClosedServerEvent)},
-            // {"TaintVulnerabilityRaised", typeof(TaintVulnerabilityRaisedServerEvent)}
+            {"TaintVulnerabilityClosed", typeof(TaintVulnerabilityClosedServerEvent)},
+            {"TaintVulnerabilityRaised", typeof(TaintVulnerabilityRaisedServerEvent)}
         };
 
         public SSEStreamReader(ChannelReader<ISqServerEvent> sqEventsChannel, CancellationToken cancellationToken, ILogger logger)
