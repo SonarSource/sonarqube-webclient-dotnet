@@ -77,8 +77,13 @@ namespace SonarQube.Client.Models.ServerSentEvents
                 if (isEventEnd)
                 {
                     var parsedEvent = sqServerSentEventParser.Parse(eventLines);
-                    await sqEventsChannel.WriteAsync(parsedEvent, cancellationToken);
+
                     eventLines.Clear();
+
+                    if (parsedEvent != null)
+                    {
+                        await sqEventsChannel.WriteAsync(parsedEvent, cancellationToken);
+                    }
                 }
                 else
                 {

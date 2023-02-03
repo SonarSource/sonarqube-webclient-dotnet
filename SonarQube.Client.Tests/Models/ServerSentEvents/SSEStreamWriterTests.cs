@@ -101,6 +101,37 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
             sqServerSentEventParser.VerifyNoOtherCalls();
         }
 
+        [TestMethod, Timeout(10000)]
+        public async Task BeginListening_FailureToParseAnEvent_EventIsIgnored()
+        {
+            var networkStreamReader = CreateNetworkStreamReader(content: "line 1\n\nline 2\nline 3\n\n");
+            var channel = CreateChannel();
+            var sqServerSentEventParser = new Mock<ISqServerSentEventParser>();
+
+            sqServerSentEventParser
+                .Setup(x => x.Parse(new[] { "line 1" }))
+                .Returns((ISqServerEvent) null);
+
+            var parsedEvent = Mock.Of<ISqServerEvent>();
+
+            sqServerSentEventParser
+                .Setup(x => x.Parse(new[] { "line 2", "line 3" }))
+                .Returns(parsedEvent);
+
+            var testSubject = CreateTestSubject(networkStreamReader, channel, sqServerSentEventParser.Object);
+
+            await testSubject.BeginListening();
+
+            networkStreamReader.EndOfStream.Should().BeTrue();
+            channel.Reader.Count.Should().Be(1);
+
+            channel.Reader.TryRead(out var actualEvent).Should().BeTrue();
+            actualEvent.Should().Be(parsedEvent);
+
+            sqServerSentEventParser.VerifyAll();
+            sqServerSentEventParser.VerifyNoOtherCalls();
+        }
+
         [TestMethod]
         public void Dispose_ClosesStream()
         {
