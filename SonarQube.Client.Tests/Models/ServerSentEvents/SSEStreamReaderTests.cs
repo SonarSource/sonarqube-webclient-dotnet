@@ -38,53 +38,53 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
     public class SSEStreamReaderTests
     {
         [TestMethod]
-        public async Task GetNextEventOrNullAsync_TokenIsCancelled_NullReturned()
+        public async Task ReadAsync_TokenIsCancelled_NullReturned()
         {
             var cancellationToken = new CancellationToken(canceled: true);
             var channel = CreateChannelWithEvents(Mock.Of<ISqServerEvent>());
 
             var testSubject = CreateTestSubject(sqEventsChannel: channel, cancellationToken: cancellationToken);
 
-            var result = await testSubject.GetNextEventOrNullAsync();
+            var result = await testSubject.ReadAsync();
 
             result.Should().BeNull();
             channel.Reader.Count.Should().Be(1);
         }
 
         [TestMethod]
-        public async Task GetNextEventOrNullAsync_Null_NullReturned()
+        public async Task ReadAsync_Null_NullReturned()
         {
             var channel = CreateChannelWithEvents((ISqServerEvent) null);
 
             var testSubject = CreateTestSubject(sqEventsChannel: channel);
 
-            var result = await testSubject.GetNextEventOrNullAsync();
+            var result = await testSubject.ReadAsync();
 
             result.Should().BeNull();
         }
 
         [TestMethod]
         [Description("SQ stream events that we do not support yet. We need to ignore them.")]
-        public async Task GetNextEventOrNullAsync_UnrecognizedEventType_NullReturned()
+        public async Task ReadAsync_UnrecognizedEventType_NullReturned()
         {
             var channel = CreateChannelWithEvents(new SqServerEvent("some type 111", "some data"));
 
             var testSubject = CreateTestSubject(sqEventsChannel: channel);
 
-            var result = await testSubject.GetNextEventOrNullAsync();
+            var result = await testSubject.ReadAsync();
 
             result.Should().BeNull();
         }
 
         [TestMethod]
-        public async Task GetNextEventOrNullAsync_FailureToDeserializeTheEventData_ExceptionLoggedAndNullReturned()
+        public async Task ReadAsync_FailureToDeserializeTheEventData_ExceptionLoggedAndNullReturned()
         {
             var channel = CreateChannelWithEvents(new SqServerEvent("IssueChanged", "some invalid data"));
             var logger = new TestLogger();
 
             var testSubject = CreateTestSubject(sqEventsChannel: channel, logger);
 
-            var result = await testSubject.GetNextEventOrNullAsync();
+            var result = await testSubject.ReadAsync();
 
             result.Should().BeNull();
 
@@ -95,7 +95,7 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
         }
 
         [TestMethod, Description("Missing mandatory 'branchName' field")]
-        public async Task GetNextEventOrNullAsync_IssueChangedEventType_MissingMandatoryFields_ExceptionLoggedAndNullReturned()
+        public async Task ReadAsync_IssueChangedEventType_MissingMandatoryFields_ExceptionLoggedAndNullReturned()
         {
             const string serializedIssueChangedEvent =
                 "{\"projectKey\": \"projectKey1\",\"issues\": [{\"issueKey\": \"key1\"}],\"resolved\": \"true\"}";
@@ -105,7 +105,7 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
 
             var testSubject = CreateTestSubject(sqEventsChannel: channel, logger);
 
-            var result = await testSubject.GetNextEventOrNullAsync();
+            var result = await testSubject.ReadAsync();
 
             result.Should().BeNull();
 
@@ -117,7 +117,7 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
         }
 
         [TestMethod]
-        public async Task GetNextEventOrNullAsync_IssueChangedEventType_DeserializedEvent()
+        public async Task ReadAsync_IssueChangedEventType_DeserializedEvent()
         {
             const string serializedIssueChangedEvent =
                 "{\"projectKey\": \"projectKey1\",\"issues\": [{\"issueKey\": \"key1\",\"branchName\": \"master\"}],\"resolved\": \"true\"}";
@@ -126,7 +126,7 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
 
             var testSubject = CreateTestSubject(sqEventsChannel: channel);
 
-            var result = await testSubject.GetNextEventOrNullAsync();
+            var result = await testSubject.ReadAsync();
 
             result.Should().NotBeNull();
             result.Should().BeOfType<IssueChangedServerEvent>();
