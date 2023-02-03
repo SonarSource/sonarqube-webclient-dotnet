@@ -40,7 +40,7 @@ namespace SonarQube.Client.Models.ServerSentEvents
     /// Aggregates stream lines into events.
     /// Code on the java side: https://github.com/SonarSource/sonarlint-core/blob/171ca4d75c24033e115a81bd7481427cd1f39f4c/server-api/src/main/java/org/sonarsource/sonarlint/core/serverapi/stream/EventBuffer.java
     /// </summary>
-    internal class SSEStreamWriter : ISSEStreamWriter
+    internal sealed class SSEStreamWriter : ISSEStreamWriter
     {
         private readonly StreamReader networkStreamReader;
         private readonly ChannelWriter<ISqServerEvent> sqEventsChannel;
