@@ -36,7 +36,10 @@ namespace SonarQube.Client.Models.ServerSentEvents
         /// Will block the calling thread until an event exists or the connection is closed.
         /// Can throw an exception if the event is not a valid <see cref="IServerEvent"/>
         /// </summary>
-        Task<IServerEvent> GetNextEventOrNullAsync();
+        /// <returns>
+        /// Will return null if the underlying event is unsupported or if there was a problem parsing it.
+        /// </returns>
+        Task<IServerEvent> ReadAsync();
     }
 
     /// <summary>
@@ -49,7 +52,7 @@ namespace SonarQube.Client.Models.ServerSentEvents
         private readonly CancellationToken cancellationToken;
         private readonly ILogger logger;
 
-        private readonly IDictionary<string, Type> eventConverters = new Dictionary<string, Type>
+        private readonly IDictionary<string, Type> eventTypeToDataTypeMap = new Dictionary<string, Type>
         {
             {"IssueChanged", typeof(IssueChangedServerEvent)},
             {"TaintVulnerabilityClosed", typeof(TaintVulnerabilityClosedServerEvent)},
@@ -63,18 +66,18 @@ namespace SonarQube.Client.Models.ServerSentEvents
             this.sqEventsChannel = sqEventsChannel;
         }
 
-        public async Task<IServerEvent> GetNextEventOrNullAsync()
+        public async Task<IServerEvent> ReadAsync()
         {
-            var sqEvent = await ReadNextEvent();
+            var sqEvent = await ReadNextEventAsync();
 
-            if (sqEvent == null || !eventConverters.ContainsKey(sqEvent.Type))
+            if (sqEvent == null || !eventTypeToDataTypeMap.ContainsKey(sqEvent.Type))
             {
                 return null;
             }
 
             try
             {
-                var deserializedEvent = JsonConvert.DeserializeObject(sqEvent.Data, eventConverters[sqEvent.Type]);
+                var deserializedEvent = JsonConvert.DeserializeObject(sqEvent.Data, eventTypeToDataTypeMap[sqEvent.Type]);
 
                 return (IServerEvent) deserializedEvent;
             }
@@ -89,7 +92,7 @@ namespace SonarQube.Client.Models.ServerSentEvents
             }
         }
 
-        private async Task<ISqServerEvent> ReadNextEvent()
+        private async Task<ISqServerEvent> ReadNextEventAsync()
         {
             try
             {
