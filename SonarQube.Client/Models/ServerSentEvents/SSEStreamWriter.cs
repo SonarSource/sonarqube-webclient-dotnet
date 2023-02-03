@@ -21,7 +21,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Channels;
 using System.Threading;
 using System.Threading.Tasks;
@@ -43,24 +42,24 @@ namespace SonarQube.Client.Models.ServerSentEvents
     /// </summary>
     internal class SSEStreamWriter : ISSEStreamWriter
     {
-        private readonly StreamReader serverStreamReader;
+        private readonly StreamReader networkStreamReader;
         private readonly ChannelWriter<ISqServerEvent> sqEventsChannel;
         private readonly CancellationToken cancellationToken;
         private readonly ISqServerSentEventParser sqServerSentEventParser;
 
-        public SSEStreamWriter(StreamReader serverStreamReader,
+        public SSEStreamWriter(StreamReader networkStreamReader,
             ChannelWriter<ISqServerEvent> sqEventsChannel,
             CancellationToken cancellationToken)
-            : this(serverStreamReader, sqEventsChannel, cancellationToken, new SqServerSentEventParser())
+            : this(networkStreamReader, sqEventsChannel, cancellationToken, new SqServerSentEventParser())
         {
         }
 
-        internal SSEStreamWriter(StreamReader serverStreamReader,
+        internal SSEStreamWriter(StreamReader networkStreamReader,
             ChannelWriter<ISqServerEvent> sqEventsChannel,
             CancellationToken cancellationToken,
             ISqServerSentEventParser sqServerSentEventParser)
         {
-            this.serverStreamReader = serverStreamReader;
+            this.networkStreamReader = networkStreamReader;
             this.cancellationToken = cancellationToken;
             this.sqEventsChannel = sqEventsChannel;
             this.sqServerSentEventParser = sqServerSentEventParser;
@@ -70,14 +69,14 @@ namespace SonarQube.Client.Models.ServerSentEvents
         {
             var eventLines = new List<string>();
 
-            while (!serverStreamReader.EndOfStream && !cancellationToken.IsCancellationRequested)
+            while (!networkStreamReader.EndOfStream && !cancellationToken.IsCancellationRequested)
             {
-                var line = await serverStreamReader.ReadLineAsync();
-                var isEventEnd = line == string.Empty;
+                var line = await networkStreamReader.ReadLineAsync();
+                var isEventEnd = string.IsNullOrEmpty(line);
 
                 if (isEventEnd)
                 {
-                    var parsedEvent = sqServerSentEventParser.Parse(eventLines.ToList());
+                    var parsedEvent = sqServerSentEventParser.Parse(eventLines);
                     await sqEventsChannel.WriteAsync(parsedEvent, cancellationToken);
                     eventLines.Clear();
                 }
@@ -90,7 +89,7 @@ namespace SonarQube.Client.Models.ServerSentEvents
 
         public void Dispose()
         {
-            serverStreamReader.Dispose();
+            networkStreamReader.Dispose();
             sqEventsChannel.Complete();
         }
     }
