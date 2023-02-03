@@ -38,6 +38,20 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
     public class SSEStreamReaderTests
     {
         [TestMethod]
+        public async Task GetNextEventOrNullAsync_TokenIsCancelled_NullReturned()
+        {
+            var cancellationToken = new CancellationToken(canceled: true);
+            var channel = CreateChannelWithEvents(Mock.Of<ISqServerEvent>());
+
+            var testSubject = CreateTestSubject(sqEventsChannel: channel, cancellationToken: cancellationToken);
+
+            var result = await testSubject.GetNextEventOrNullAsync();
+
+            result.Should().BeNull();
+            channel.Reader.Count.Should().Be(1);
+        }
+
+        [TestMethod]
         public async Task GetNextEventOrNullAsync_Null_NullReturned()
         {
             var channel = CreateChannelWithEvents((ISqServerEvent) null);
@@ -135,11 +149,14 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
             return channel;
         }
 
-        private SSEStreamReader CreateTestSubject(Channel<ISqServerEvent> sqEventsChannel, ILogger logger = null)
+        private SSEStreamReader CreateTestSubject(Channel<ISqServerEvent> sqEventsChannel, 
+            ILogger logger = null,
+            CancellationToken? cancellationToken = null)
         {
             logger ??= Mock.Of<ILogger>();
+            cancellationToken ??= CancellationToken.None;
 
-            return new SSEStreamReader(sqEventsChannel, CancellationToken.None, logger);
+            return new SSEStreamReader(sqEventsChannel, cancellationToken.Value, logger);
         }
     }
 }

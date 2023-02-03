@@ -66,7 +66,7 @@ namespace SonarQube.Client.Models.ServerSentEvents
 
         public async Task<IServerEvent> GetNextEventOrNullAsync()
         {
-            var sqEvent = await sqEventsChannel.ReadAsync(cancellationToken);
+            var sqEvent = await ReadNextEvent();
 
             if (sqEvent == null || !eventConverters.ContainsKey(sqEvent.Type))
             {
@@ -85,6 +85,26 @@ namespace SonarQube.Client.Models.ServerSentEvents
                              $"\n Exception: {ex}" +
                              $"\n Raw event type: {sqEvent.Type}" +
                              $"\n Raw event data: {sqEvent.Data}");
+
+                return null;
+            }
+        }
+
+        private async Task<ISqServerEvent> ReadNextEvent()
+        {
+            try
+            {
+                var sqEvent = await sqEventsChannel.ReadAsync(cancellationToken);
+
+                return sqEvent;
+            }
+            catch (TaskCanceledException)
+            {
+                return null;
+            }
+            catch (Exception ex)
+            {
+                logger.Debug($"[SSEStreamReader] Failed to read sq event: {ex}");
 
                 return null;
             }
