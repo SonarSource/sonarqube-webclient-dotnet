@@ -29,17 +29,17 @@ using SonarQube.Client.Models.ServerSentEvents;
 namespace SonarQube.Client.Tests.Models.ServerSentEvents
 {
     [TestClass]
-    public class SSEStreamFactoryTests
+    public class SSEStreamReaderFactoryTests
     {
         [TestMethod]
-        public void Create_CreatesSSEStream()
+        public void Create_CreatesSSEStreamReader()
         {
-            var sseStreamFactory = new SSEStreamFactory(Mock.Of<ILogger>());
+            var testSubject = new SSEStreamReaderFactory(Mock.Of<ILogger>());
 
-            var sseStreamReader = sseStreamFactory.Create(Stream.Null, CancellationToken.None);
+            var result = testSubject.Create(Stream.Null, CancellationToken.None);
 
-            sseStreamReader.Should().NotBeNull();
-            sseStreamReader.Should().BeOfType<SSEStreamReader>();
+            result.Should().NotBeNull();
+            result.Should().BeOfType<SSEStreamReader>();
         }
     }
 }

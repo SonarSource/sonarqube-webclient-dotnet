@@ -25,16 +25,16 @@ using SonarQube.Client.Models.ServerSentEvents.ServerContract;
 
 namespace SonarQube.Client.Models.ServerSentEvents
 {
-    internal interface ISSEStreamFactory
+    internal interface ISSEStreamReaderFactory
     {
         ISSEStreamReader Create(Stream networkStream, CancellationToken cancellationToken);
     }
 
-    internal class SSEStreamFactory : ISSEStreamFactory
+    internal class SSEStreamReaderFactory : ISSEStreamReaderFactory
     {
         private readonly ILogger logger;
 
-        public SSEStreamFactory(ILogger logger)
+        public SSEStreamReaderFactory(ILogger logger)
         {
             this.logger = logger;
         }
