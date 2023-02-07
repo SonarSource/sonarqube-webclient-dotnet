@@ -129,6 +129,6 @@ namespace SonarQube.Client
         /// <summary>
         /// Creates a new <see cref="ISSEStreamReader"/> for the given <see cref="projectKey"/>
         /// </summary>
-        Task<ISSEStreamReader> CreateServerSentEventsStream(string projectKey, CancellationToken token);
+        Task<ISSEStreamReader> CreateSSEStreamReader(string projectKey, CancellationToken token);
     }
 }
