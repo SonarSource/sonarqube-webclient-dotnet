@@ -19,8 +19,6 @@
  */
 
 using System;
-using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -37,20 +35,6 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
     [TestClass]
     public class SSEStreamReaderTests
     {
-        [TestMethod]
-        public async Task ReadAsync_TokenIsCancelled_NullReturned()
-        {
-            var cancellationToken = new CancellationToken(canceled: true);
-            var channel = CreateChannelWithEvents(Mock.Of<ISqServerEvent>());
-
-            var testSubject = CreateTestSubject(sqEventsChannel: channel, cancellationToken: cancellationToken);
-
-            var result = await testSubject.ReadAsync();
-
-            result.Should().BeNull();
-            channel.Reader.Count.Should().Be(1);
-        }
-
         [TestMethod]
         public async Task ReadAsync_Null_NullReturned()
         {
@@ -178,26 +162,24 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
                     branch: "master"));
         }
 
-        private Channel<ISqServerEvent> CreateChannelWithEvents(params ISqServerEvent[] events)
+        private ISqEventReader CreateChannelWithEvents(params ISqServerEvent[] events)
         {
-            var channel = Channel.CreateUnbounded<ISqServerEvent>();
+            var channel = new Mock<ISqEventReader>();
+            var sequenceSetup = channel.SetupSequence(x => x.ReadAsync());
 
             foreach (var sqServerEvent in events)
             {
-                channel.Writer.TryWrite(sqServerEvent);
+                sequenceSetup.ReturnsAsync(sqServerEvent);
             }
 
-            return channel;
+            return channel.Object;
         }
 
-        private SSEStreamReader CreateTestSubject(Channel<ISqServerEvent> sqEventsChannel, 
-            ILogger logger = null,
-            CancellationToken? cancellationToken = null)
+        private SSEStreamReader CreateTestSubject(ISqEventReader sqEventsChannel, ILogger logger = null)
         {
             logger ??= Mock.Of<ILogger>();
-            cancellationToken ??= CancellationToken.None;
 
-            return new SSEStreamReader(sqEventsChannel, cancellationToken.Value, logger);
+            return new SSEStreamReader(sqEventsChannel, logger);
         }
     }
 }

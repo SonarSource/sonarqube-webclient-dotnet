@@ -21,7 +21,6 @@
 using System.IO;
 using System.Text;
 using System.Threading;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -40,37 +39,34 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
         public async Task BeginListening_EndOfStream_TaskFinishes(string content)
         {
             var networkStreamReader = CreateNetworkStreamReader(content);
-            var channel = CreateChannel();
 
-            var testSubject = CreateTestSubject(networkStreamReader, channel);
+            var testSubject = CreateTestSubject(networkStreamReader);
 
-            await testSubject.BeginListening();
+            var result = await testSubject.ReadAsync();
 
+            result.Should().BeNull();
             networkStreamReader.EndOfStream.Should().BeTrue();
-            channel.Reader.Count.Should().Be(0);
         }
 
         [TestMethod, Timeout(10000)]
         public async Task BeginListening_TokenIsCancelledBeforeStreamIsFinished_TaskFinishes()
         {
             var networkStreamReader = CreateNetworkStreamReader(content: "some data\nanother data\n");
-            var channel = CreateChannel();
             var cancellationToken = new CancellationTokenSource();
             cancellationToken.Cancel();
 
-            var testSubject = CreateTestSubject(networkStreamReader, channel, token: cancellationToken.Token);
+            var testSubject = CreateTestSubject(networkStreamReader, token: cancellationToken.Token);
 
-            await testSubject.BeginListening();
+            var result = await testSubject.ReadAsync();
 
+            result.Should().BeNull();
             networkStreamReader.EndOfStream.Should().BeFalse();
-            channel.Reader.Count.Should().Be(0);
         }
 
         [TestMethod, Timeout(10000)]
         public async Task BeginListening_StreamLinesAreAggregatedUntilAnEmptyLine()
         {
             var networkStreamReader = CreateNetworkStreamReader(content: "line 1\nline 2\nline 3\n\nline 4\nline 5\n\nline 6\nline 7\n");
-            var channel = CreateChannel();
             var parsedEvent1 = Mock.Of<ISqServerEvent>();
             var parsedEvent2 = Mock.Of<ISqServerEvent>();
 
@@ -84,18 +80,19 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
                 .Setup(x => x.Parse(new[] { "line 4", "line 5" }))
                 .Returns(parsedEvent2);
 
-            var testSubject = CreateTestSubject(networkStreamReader, channel, sqServerSentEventParser.Object);
+            var testSubject = CreateTestSubject(networkStreamReader, sqServerSentEventParser.Object);
 
-            await testSubject.BeginListening();
-
-            networkStreamReader.EndOfStream.Should().BeTrue();
-            channel.Reader.Count.Should().Be(2);
-
-            channel.Reader.TryRead(out var actualEvent1).Should().BeTrue();
+            var actualEvent1 = await testSubject.ReadAsync();
             actualEvent1.Should().Be(parsedEvent1);
+            networkStreamReader.EndOfStream.Should().BeFalse();
 
-            channel.Reader.TryRead(out var actualEvent2).Should().BeTrue();
+            var actualEvent2 = await testSubject.ReadAsync();
             actualEvent2.Should().Be(parsedEvent2);
+            networkStreamReader.EndOfStream.Should().BeFalse();
+
+            var actualEvent3 = await testSubject.ReadAsync();
+            actualEvent3.Should().BeNull();
+            networkStreamReader.EndOfStream.Should().BeTrue();
 
             sqServerSentEventParser.VerifyAll();
             sqServerSentEventParser.VerifyNoOtherCalls();
@@ -105,7 +102,6 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
         public async Task BeginListening_FailureToParseAnEvent_EventIsIgnored()
         {
             var networkStreamReader = CreateNetworkStreamReader(content: "line 1\n\nline 2\nline 3\n\n");
-            var channel = CreateChannel();
             var sqServerSentEventParser = new Mock<ISqServerSentEventParser>();
 
             sqServerSentEventParser
@@ -118,15 +114,11 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
                 .Setup(x => x.Parse(new[] { "line 2", "line 3" }))
                 .Returns(parsedEvent);
 
-            var testSubject = CreateTestSubject(networkStreamReader, channel, sqServerSentEventParser.Object);
+            var testSubject = CreateTestSubject(networkStreamReader, sqServerSentEventParser.Object);
 
-            await testSubject.BeginListening();
-
-            networkStreamReader.EndOfStream.Should().BeTrue();
-            channel.Reader.Count.Should().Be(1);
-
-            channel.Reader.TryRead(out var actualEvent).Should().BeTrue();
+            var actualEvent = await testSubject.ReadAsync();
             actualEvent.Should().Be(parsedEvent);
+            networkStreamReader.EndOfStream.Should().BeTrue();
 
             sqServerSentEventParser.VerifyAll();
             sqServerSentEventParser.VerifyNoOtherCalls();
@@ -146,36 +138,18 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
             networkStreamReader.BaseStream.Should().BeNull();
         }
 
-        [TestMethod]
-        public void Dispose_ClosesChannel()
-        {
-            var channel = CreateChannel();
-
-            var testSubject = CreateTestSubject(sqEventsChannel: channel);
-
-            channel.Writer.TryWrite(null).Should().BeTrue();
-
-            testSubject.Dispose();
-
-            channel.Writer.TryWrite(null).Should().BeFalse();
-        }
-
         private static StreamReader CreateNetworkStreamReader(string content) =>
             new(new MemoryStream(Encoding.UTF8.GetBytes(content)));
 
-        private static Channel<ISqServerEvent> CreateChannel() => Channel.CreateUnbounded<ISqServerEvent>();
-
         private static SSEStreamWriter CreateTestSubject(
             StreamReader networkStreamReader = null, 
-            ChannelWriter<ISqServerEvent> sqEventsChannel = null,
             ISqServerSentEventParser sqServerSentEventParser = null,
             CancellationToken? token = null)
         {
             token ??= CancellationToken.None;
-            sqEventsChannel ??= CreateChannel();
             networkStreamReader ??= CreateNetworkStreamReader("");
 
-            return new SSEStreamWriter(networkStreamReader, sqEventsChannel, token.Value, sqServerSentEventParser);
+            return new SSEStreamWriter(networkStreamReader, token.Value, sqServerSentEventParser);
         }
     }
 }

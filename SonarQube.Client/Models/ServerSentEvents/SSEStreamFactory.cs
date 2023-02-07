@@ -20,8 +20,6 @@
 
 using System.IO;
 using System.Threading;
-using SonarQube.Client.Models.ServerSentEvents.ServerContract;
-using System.Threading.Channels;
 using SonarQube.Client.Logging;
 
 namespace SonarQube.Client.Models.ServerSentEvents
@@ -42,12 +40,10 @@ namespace SonarQube.Client.Models.ServerSentEvents
 
         public ISSEStream Create(Stream networkStream, CancellationToken cancellationToken)
         {
-            var channel = Channel.CreateUnbounded<ISqServerEvent>();
+            var writer = new SSEStreamWriter(new StreamReader(networkStream), cancellationToken);
+            var reader = new SSEStreamReader(writer, logger);
 
-            var reader = new SSEStreamReader(channel.Reader, cancellationToken, logger);
-            var writer = new SSEStreamWriter(new StreamReader(networkStream), channel.Writer, cancellationToken);
-
-            return new SSEStream(reader, writer);
+            return reader;
         }
     }
 }
