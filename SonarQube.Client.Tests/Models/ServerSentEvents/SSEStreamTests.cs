@@ -33,14 +33,14 @@ using SonarQube.Client.Tests.Infra;
 namespace SonarQube.Client.Tests.Models.ServerSentEvents
 {
     [TestClass]
-    public class SSEStreamReaderTests
+    public class SSEStreamTests
     {
         [TestMethod]
         public async Task ReadAsync_Null_NullReturned()
         {
             var channel = CreateChannelWithEvents((ISqServerEvent) null);
 
-            var testSubject = CreateTestSubject(sqEventsChannel: channel);
+            var testSubject = CreateTestSubject(sqSSEStreamReader: channel);
 
             var result = await testSubject.ReadAsync();
 
@@ -53,7 +53,7 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
         {
             var channel = CreateChannelWithEvents(new SqServerEvent("some type 111", "some data"));
 
-            var testSubject = CreateTestSubject(sqEventsChannel: channel);
+            var testSubject = CreateTestSubject(sqSSEStreamReader: channel);
 
             var result = await testSubject.ReadAsync();
 
@@ -66,7 +66,7 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
             var channel = CreateChannelWithEvents(new SqServerEvent("IssueChanged", "some invalid data"));
             var logger = new TestLogger();
 
-            var testSubject = CreateTestSubject(sqEventsChannel: channel, logger);
+            var testSubject = CreateTestSubject(sqSSEStreamReader: channel, logger);
 
             var result = await testSubject.ReadAsync();
 
@@ -87,7 +87,7 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
             var channel = CreateChannelWithEvents(new SqServerEvent("IssueChanged", serializedIssueChangedEvent));
             var logger = new TestLogger();
 
-            var testSubject = CreateTestSubject(sqEventsChannel: channel, logger);
+            var testSubject = CreateTestSubject(sqSSEStreamReader: channel, logger);
 
             var result = await testSubject.ReadAsync();
 
@@ -108,7 +108,7 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
 
             var channel = CreateChannelWithEvents(new SqServerEvent("IssueChanged", serializedIssueChangedEvent));
 
-            var testSubject = CreateTestSubject(sqEventsChannel: channel);
+            var testSubject = CreateTestSubject(sqSSEStreamReader: channel);
 
             var result = await testSubject.ReadAsync();
 
@@ -129,7 +129,7 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
 
             var channel = CreateChannelWithEvents(new SqServerEvent("TaintVulnerabilityClosed", serializedTaintVulnerabilityClosedEvent));
 
-            var testSubject = CreateTestSubject(sqEventsChannel: channel);
+            var testSubject = CreateTestSubject(sqSSEStreamReader: channel);
 
             var result = await testSubject.ReadAsync();
 
@@ -149,7 +149,7 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
 
             var channel = CreateChannelWithEvents(new SqServerEvent("TaintVulnerabilityRaised", serializedTaintVulnerabilityRaisedEvent));
 
-            var testSubject = CreateTestSubject(sqEventsChannel: channel);
+            var testSubject = CreateTestSubject(sqSSEStreamReader: channel);
 
             var result = await testSubject.ReadAsync();
 
@@ -162,9 +162,9 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
                     branch: "master"));
         }
 
-        private ISqEventReader CreateChannelWithEvents(params ISqServerEvent[] events)
+        private ISqSSEStreamReader CreateChannelWithEvents(params ISqServerEvent[] events)
         {
-            var channel = new Mock<ISqEventReader>();
+            var channel = new Mock<ISqSSEStreamReader>();
             var sequenceSetup = channel.SetupSequence(x => x.ReadAsync());
 
             foreach (var sqServerEvent in events)
@@ -175,11 +175,11 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
             return channel.Object;
         }
 
-        private SSEStreamReader CreateTestSubject(ISqEventReader sqEventsChannel, ILogger logger = null)
+        private SSEStream CreateTestSubject(ISqSSEStreamReader sqSSEStreamReader, ILogger logger = null)
         {
             logger ??= Mock.Of<ILogger>();
 
-            return new SSEStreamReader(sqEventsChannel, logger);
+            return new SSEStream(sqSSEStreamReader, logger);
         }
     }
 }

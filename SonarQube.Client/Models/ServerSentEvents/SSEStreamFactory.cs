@@ -40,8 +40,8 @@ namespace SonarQube.Client.Models.ServerSentEvents
 
         public ISSEStream Create(Stream networkStream, CancellationToken cancellationToken)
         {
-            var writer = new SSEStreamWriter(new StreamReader(networkStream), cancellationToken);
-            var reader = new SSEStreamReader(writer, logger);
+            var sqStreamReader = new SqSSEStreamReader(new StreamReader(networkStream), cancellationToken);
+            var reader = new SSEStream(sqStreamReader, logger);
 
             return reader;
         }

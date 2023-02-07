@@ -31,12 +31,12 @@ using SonarQube.Client.Models.ServerSentEvents.ServerContract;
 namespace SonarQube.Client.Tests.Models.ServerSentEvents
 {
     [TestClass]
-    public class SSEStreamWriterTests
+    public class SqSSEStreamReaderTests
     {
         [TestMethod, Timeout(10000)]
         [DataRow("")]
         [DataRow("some data\nanother data")]
-        public async Task BeginListening_EndOfStream_TaskFinishes(string content)
+        public async Task ReadAsync_EndOfStream_TaskFinishes(string content)
         {
             var networkStreamReader = CreateNetworkStreamReader(content);
 
@@ -49,7 +49,7 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
         }
 
         [TestMethod, Timeout(10000)]
-        public async Task BeginListening_TokenIsCancelledBeforeStreamIsFinished_TaskFinishes()
+        public async Task ReadAsync_TokenIsCancelledBeforeStreamIsFinished_TaskFinishes()
         {
             var networkStreamReader = CreateNetworkStreamReader(content: "some data\nanother data\n");
             var cancellationToken = new CancellationTokenSource();
@@ -64,7 +64,7 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
         }
 
         [TestMethod, Timeout(10000)]
-        public async Task BeginListening_StreamLinesAreAggregatedUntilAnEmptyLine()
+        public async Task ReadAsync_StreamLinesAreAggregatedUntilAnEmptyLine()
         {
             var networkStreamReader = CreateNetworkStreamReader(content: "line 1\nline 2\nline 3\n\nline 4\nline 5\n\nline 6\nline 7\n");
             var parsedEvent1 = Mock.Of<ISqServerEvent>();
@@ -99,7 +99,7 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
         }
 
         [TestMethod, Timeout(10000)]
-        public async Task BeginListening_FailureToParseAnEvent_EventIsIgnored()
+        public async Task ReadAsync_FailureToParseAnEvent_EventIsIgnored()
         {
             var networkStreamReader = CreateNetworkStreamReader(content: "line 1\n\nline 2\nline 3\n\n");
             var sqServerSentEventParser = new Mock<ISqServerSentEventParser>();
@@ -141,15 +141,14 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
         private static StreamReader CreateNetworkStreamReader(string content) =>
             new(new MemoryStream(Encoding.UTF8.GetBytes(content)));
 
-        private static SSEStreamWriter CreateTestSubject(
-            StreamReader networkStreamReader = null, 
+        private static SqSSEStreamReader CreateTestSubject(
+            StreamReader networkStreamReader, 
             ISqServerSentEventParser sqServerSentEventParser = null,
             CancellationToken? token = null)
         {
             token ??= CancellationToken.None;
-            networkStreamReader ??= CreateNetworkStreamReader("");
 
-            return new SSEStreamWriter(networkStreamReader, token.Value, sqServerSentEventParser);
+            return new SqSSEStreamReader(networkStreamReader, token.Value, sqServerSentEventParser);
         }
     }
 }

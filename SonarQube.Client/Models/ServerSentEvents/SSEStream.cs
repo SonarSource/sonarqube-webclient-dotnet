@@ -43,9 +43,9 @@ namespace SonarQube.Client.Models.ServerSentEvents
     /// Returns <see cref="IServerEvent"/> deserialized from <see cref="ISqServerEvent"/>
     /// Code on the java side: https://github.com/SonarSource/sonarlint-core/blob/4f34c7c844b12e331a61c63ad7105acac41d2efd/server-api/src/main/java/org/sonarsource/sonarlint/core/serverapi/push/PushApi.java
     /// </summary>
-    internal class SSEStreamReader : ISSEStream
+    internal class SSEStream : ISSEStream
     {
-        private readonly ISqEventReader sqEventReader;
+        private readonly ISqSSEStreamReader sqSSEStreamReader;
         private readonly ILogger logger;
 
         private readonly IDictionary<string, Type> eventTypeToDataTypeMap = new Dictionary<string, Type>
@@ -55,9 +55,9 @@ namespace SonarQube.Client.Models.ServerSentEvents
             {"TaintVulnerabilityRaised", typeof(TaintVulnerabilityRaisedServerEvent)}
         };
 
-        public SSEStreamReader(ISqEventReader sqEventReader, ILogger logger)
+        public SSEStream(ISqSSEStreamReader sqSSEStreamReader, ILogger logger)
         {
-            this.sqEventReader = sqEventReader;
+            this.sqSSEStreamReader = sqSSEStreamReader;
             this.logger = logger;
         }
 
@@ -78,7 +78,7 @@ namespace SonarQube.Client.Models.ServerSentEvents
             }
             catch (Exception ex)
             {
-                logger.Debug("[SSEStreamReader] Failed to deserialize sq event." +
+                logger.Debug("[SSEStream] Failed to deserialize sq event." +
                              $"\n Exception: {ex}" +
                              $"\n Raw event type: {sqEvent.Type}" +
                              $"\n Raw event data: {sqEvent.Data}");
@@ -91,7 +91,7 @@ namespace SonarQube.Client.Models.ServerSentEvents
         {
             try
             {
-                var sqEvent = await sqEventReader.ReadAsync();
+                var sqEvent = await sqSSEStreamReader.ReadAsync();
 
                 return sqEvent;
             }
@@ -101,7 +101,7 @@ namespace SonarQube.Client.Models.ServerSentEvents
             }
             catch (Exception ex)
             {
-                logger.Debug($"[SSEStreamReader] Failed to read sq event: {ex}");
+                logger.Debug($"[SSEStream] Failed to read sq event: {ex}");
 
                 return null;
             }

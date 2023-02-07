@@ -39,7 +39,7 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
             var sseStream = sseStreamFactory.Create(Stream.Null, CancellationToken.None);
 
             sseStream.Should().NotBeNull();
-            sseStream.Should().BeOfType<SSEStreamReader>();
+            sseStream.Should().BeOfType<SSEStream>();
         }
     }
 }
