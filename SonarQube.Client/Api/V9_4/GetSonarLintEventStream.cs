@@ -21,8 +21,10 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using SonarQube.Client.Models;
@@ -34,6 +36,8 @@ namespace SonarQube.Client.Api.V9_4
     {
         private static readonly string AllKnownLanguages = string.Join(",", SonarQubeLanguage.AllLanguages.Select(x => x.Key));
 
+        private const int MaxNumberOfRequestAttempts = 10;
+
         protected override string Path => "api/push/sonarlint_events";
 
         protected override MediaTypeWithQualityHeaderValue[] AllowedMediaTypeHeaders =>
@@ -41,6 +45,41 @@ namespace SonarQube.Client.Api.V9_4
             {
                 MediaTypeWithQualityHeaderValue.Parse("text/event-stream")
             };
+
+        public override async Task<Stream> InvokeAsync(HttpClient httpClient, CancellationToken token)
+        {
+            var requestAttempts = 0;
+
+            return await InvokeWithRetriesAsync();
+
+            async Task<Stream> InvokeWithRetriesAsync()
+            {
+                do
+                {
+                    requestAttempts++;
+
+                    var result = await InvokeUncheckedAsync(httpClient, token);
+
+                    if (ShouldRetry(result) && requestAttempts < MaxNumberOfRequestAttempts)
+                    {
+                        continue;
+                    }
+
+                    result.EnsureSuccess();
+
+                    return result.Value;
+                } while (true);
+            }
+        }
+
+        private static bool ShouldRetry(Result<Stream> result)
+        {
+            var isRecoverableStatus = result.StatusCode != HttpStatusCode.Forbidden &&
+                                      result.StatusCode != HttpStatusCode.Unauthorized &&
+                                      result.StatusCode != HttpStatusCode.NotFound;
+
+            return !result.IsSuccess && isRecoverableStatus;
+        }
 
         protected override async Task<Result<Stream>> ReadResponseAsync(HttpResponseMessage httpResponse)
         {
