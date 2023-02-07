@@ -36,10 +36,10 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
         {
             var sseStreamFactory = new SSEStreamFactory(Mock.Of<ILogger>());
 
-            var sseStream = sseStreamFactory.Create(Stream.Null, CancellationToken.None);
+            var sseStreamReader = sseStreamFactory.Create(Stream.Null, CancellationToken.None);
 
-            sseStream.Should().NotBeNull();
-            sseStream.Should().BeOfType<SSEStream>();
+            sseStreamReader.Should().NotBeNull();
+            sseStreamReader.Should().BeOfType<SSEStreamReader>();
         }
     }
 }

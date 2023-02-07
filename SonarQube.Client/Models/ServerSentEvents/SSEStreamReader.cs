@@ -28,7 +28,7 @@ using SonarQube.Client.Logging;
 
 namespace SonarQube.Client.Models.ServerSentEvents
 {
-    public interface ISSEStream
+    public interface ISSEStreamReader
     {
         /// <summary>
         /// Wraps the stream response from the server, reads from it and converts it to <see cref="IServerEvent"/>
@@ -43,7 +43,7 @@ namespace SonarQube.Client.Models.ServerSentEvents
     /// Returns <see cref="IServerEvent"/> deserialized from <see cref="ISqServerEvent"/>
     /// Code on the java side: https://github.com/SonarSource/sonarlint-core/blob/4f34c7c844b12e331a61c63ad7105acac41d2efd/server-api/src/main/java/org/sonarsource/sonarlint/core/serverapi/push/PushApi.java
     /// </summary>
-    internal class SSEStream : ISSEStream
+    internal class SSEStreamReader : ISSEStreamReader
     {
         private readonly ISqSSEStreamReader sqSSEStreamReader;
         private readonly ILogger logger;
@@ -55,7 +55,7 @@ namespace SonarQube.Client.Models.ServerSentEvents
             {"TaintVulnerabilityRaised", typeof(TaintVulnerabilityRaisedServerEvent)}
         };
 
-        public SSEStream(ISqSSEStreamReader sqSSEStreamReader, ILogger logger)
+        public SSEStreamReader(ISqSSEStreamReader sqSSEStreamReader, ILogger logger)
         {
             this.sqSSEStreamReader = sqSSEStreamReader;
             this.logger = logger;
@@ -78,7 +78,7 @@ namespace SonarQube.Client.Models.ServerSentEvents
             }
             catch (Exception ex)
             {
-                logger.Debug("[SSEStream] Failed to deserialize sq event." +
+                logger.Debug("[SSEStreamReader] Failed to deserialize sq event." +
                              $"\n Exception: {ex}" +
                              $"\n Raw event type: {sqEvent.Type}" +
                              $"\n Raw event data: {sqEvent.Data}");
@@ -101,7 +101,7 @@ namespace SonarQube.Client.Models.ServerSentEvents
             }
             catch (Exception ex)
             {
-                logger.Debug($"[SSEStream] Failed to read sq event: {ex}");
+                logger.Debug($"[SSEStreamReader] Failed to read sq event: {ex}");
 
                 return null;
             }

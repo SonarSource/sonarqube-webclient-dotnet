@@ -420,7 +420,7 @@ namespace SonarQube.Client
                     request.ProjectKey = projectKey;
                 }, token);
 
-        public async Task<ISSEStream> CreateServerSentEventsStream(string projectKey, CancellationToken token)
+        public async Task<ISSEStreamReader> CreateServerSentEventsStream(string projectKey, CancellationToken token)
         {
             var networkStream = await InvokeCheckedRequestAsync<IGetSonarLintEventStream, Stream>(
                 request =>

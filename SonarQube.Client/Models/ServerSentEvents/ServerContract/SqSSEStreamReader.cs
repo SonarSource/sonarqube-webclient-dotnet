@@ -23,9 +23,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using SonarQube.Client.Models.ServerSentEvents.ServerContract;
 
-namespace SonarQube.Client.Models.ServerSentEvents
+namespace SonarQube.Client.Models.ServerSentEvents.ServerContract
 {
     /// <summary>
     /// Reads lines from the network stream and aggregates them into <see cref="ISqServerEvent"/>.

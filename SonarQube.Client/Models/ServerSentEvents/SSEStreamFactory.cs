@@ -21,12 +21,13 @@
 using System.IO;
 using System.Threading;
 using SonarQube.Client.Logging;
+using SonarQube.Client.Models.ServerSentEvents.ServerContract;
 
 namespace SonarQube.Client.Models.ServerSentEvents
 {
     internal interface ISSEStreamFactory
     {
-        ISSEStream Create(Stream networkStream, CancellationToken cancellationToken);
+        ISSEStreamReader Create(Stream networkStream, CancellationToken cancellationToken);
     }
 
     internal class SSEStreamFactory : ISSEStreamFactory
@@ -38,12 +39,12 @@ namespace SonarQube.Client.Models.ServerSentEvents
             this.logger = logger;
         }
 
-        public ISSEStream Create(Stream networkStream, CancellationToken cancellationToken)
+        public ISSEStreamReader Create(Stream networkStream, CancellationToken cancellationToken)
         {
             var sqStreamReader = new SqSSEStreamReader(new StreamReader(networkStream), cancellationToken);
-            var reader = new SSEStream(sqStreamReader, logger);
+            var sseStreamReader = new SSEStreamReader(sqStreamReader, logger);
 
-            return reader;
+            return sseStreamReader;
         }
     }
 }
