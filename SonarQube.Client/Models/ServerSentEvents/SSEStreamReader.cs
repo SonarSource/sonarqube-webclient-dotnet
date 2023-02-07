@@ -31,10 +31,12 @@ namespace SonarQube.Client.Models.ServerSentEvents
     public interface ISSEStreamReader
     {
         /// <summary>
-        /// Wraps the stream response from the server, reads from it and converts it to <see cref="IServerEvent"/>
+        /// Wraps the stream response from the server, reads from it and converts it to <see cref="IServerEvent"/>.
+        /// Will block the calling thread until an event exists or the connection is closed.
         /// </summary>
         /// <returns>
-        /// Can return null. For example, if the underlying event type is unsupported
+        /// Can return null (i.e. if the underlying event type is unsupported).
+        /// Will throw if there was a problem reading from the underlying stream.
         /// </returns>
         Task<IServerEvent> ReadAsync();
     }

@@ -43,7 +43,7 @@ namespace SonarQube.Client
         private readonly ILogger logger;
         private readonly IRequestFactorySelector requestFactorySelector;
         private readonly ISecondaryIssueHashUpdater secondaryIssueHashUpdater;
-        private readonly ISSEStreamReaderFactory isseStreamReaderFactory;
+        private readonly ISSEStreamReaderFactory sseStreamReaderFactory;
 
         private HttpClient httpClient;
         private ServerInfo currentServerInfo;
@@ -89,7 +89,7 @@ namespace SonarQube.Client
 
             this.requestFactorySelector = requestFactorySelector;
             this.secondaryIssueHashUpdater = secondaryIssueHashUpdater;
-            this.isseStreamReaderFactory = sseStreamReaderFactory;
+            this.sseStreamReaderFactory = sseStreamReaderFactory;
         }
 
         /// <summary>
@@ -429,7 +429,7 @@ namespace SonarQube.Client
                 },
                 token);
 
-            return isseStreamReaderFactory.Create(networkStream, token);
+            return sseStreamReaderFactory.Create(networkStream, token);
         }
 
         #region IDisposable Support
