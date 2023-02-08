@@ -31,6 +31,7 @@ namespace SonarQube.Client.Models.ServerSentEvents.ServerContract
     /// </summary>
     /// <returns>
     /// Returns aggregated <see cref="ISqServerEvent"/> or null if the stream ended or the task was cancelled.
+    /// Will throw if there was a problem reading from the underlying stream.
     /// </returns>
     internal interface ISqSSEStreamReader : IDisposable
     {

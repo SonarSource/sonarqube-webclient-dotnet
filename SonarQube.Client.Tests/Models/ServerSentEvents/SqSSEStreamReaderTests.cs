@@ -18,6 +18,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
+using System;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -121,6 +122,23 @@ namespace SonarQube.Client.Tests.Models.ServerSentEvents
 
             sqServerSentEventParser.VerifyAll();
             sqServerSentEventParser.VerifyNoOtherCalls();
+        }
+
+        [TestMethod, Timeout(10000)]
+        public async Task ReadAsync_StreamCrashesInTheMiddle_Exception()
+        {
+            var networkStreamReader = CreateNetworkStreamReader(content: "line 1\n\nline 2\nline 3\n\n");
+            var cancellationToken = new CancellationTokenSource();
+            cancellationToken.Cancel();
+
+            var testSubject = CreateTestSubject(networkStreamReader, token: cancellationToken.Token);
+
+            await testSubject.ReadAsync();
+            networkStreamReader.Close();
+
+            Func<Task<ISqServerEvent>> func = async () => await testSubject.ReadAsync();
+
+            func.Should().ThrowExactly<ObjectDisposedException>().And.Message.Should().Be("Cannot read from a closed TextReader.");
         }
 
         [TestMethod]

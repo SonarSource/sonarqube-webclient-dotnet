@@ -36,7 +36,6 @@ namespace SonarQube.Client.Models.ServerSentEvents
         /// </summary>
         /// <returns>
         /// Can return null (i.e. if the underlying event type is unsupported).
-        /// Will throw if there was a problem reading from the underlying stream.
         /// </returns>
         Task<IServerEvent> ReadAsync();
     }
