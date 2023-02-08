@@ -24,7 +24,6 @@ namespace SonarQube.Client.Models.ServerSentEvents.ClientContract
 {
     public interface ITaintIssue
     {
-        //DateTimeOffset CreationDate { get; }
         string RuleKey { get; }
         SonarQubeIssueSeverity Severity { get; }
         SonarQubeIssueType Type { get; }
@@ -56,12 +55,10 @@ namespace SonarQube.Client.Models.ServerSentEvents.ClientContract
     internal class TaintIssue : ITaintIssue
     {
         public TaintIssue(
-            //DateTimeOffset creationDate, 
             string ruleKey, 
             SonarQubeIssueSeverity severity, SonarQubeIssueType type,
             Location mainLocation, Flow[] flows)
         {
-            //CreationDate = creationDate;
             RuleKey = ruleKey ?? throw new ArgumentNullException(nameof(ruleKey));
             Severity = severity;
             Type = type;
@@ -69,7 +66,6 @@ namespace SonarQube.Client.Models.ServerSentEvents.ClientContract
             Flows = flows ?? throw new ArgumentNullException(nameof(flows));
         }
 
-        //public DateTimeOffset CreationDate { get; }
         public string RuleKey { get; }
         public SonarQubeIssueSeverity Severity { get; }
         public SonarQubeIssueType Type { get; }
