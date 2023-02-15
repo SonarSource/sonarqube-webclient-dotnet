@@ -34,7 +34,7 @@ namespace SonarQube.Client.Tests.Helpers
         {
             var testData = new TestData("hello", DateTimeOffset.UtcNow, 12345);
 
-            var act = () => JsonConvert.SerializeObject(testData);
+            Action act = () => JsonConvert.SerializeObject(testData);
 
             act.Should().Throw<NotSupportedException>();
         }
@@ -96,7 +96,7 @@ namespace SonarQube.Client.Tests.Helpers
             }}
             ";
 
-            var act = () => JsonConvert.DeserializeObject<TestData>(json);
+            Action act = () => JsonConvert.DeserializeObject<TestData>(json);
 
             act.Should().Throw<ArgumentOutOfRangeException>();
         }
