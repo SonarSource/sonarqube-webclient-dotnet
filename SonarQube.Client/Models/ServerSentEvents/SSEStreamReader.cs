@@ -94,9 +94,8 @@ namespace SonarQube.Client.Models.ServerSentEvents
             {
                 return await sqSSEStreamReader.ReadAsync();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                logger.Warning($"[SSEStreamReader] Underlying stream failure while reading next event: {ex}");
                 sqSSEStreamReader.Dispose();
                 throw;
             }
