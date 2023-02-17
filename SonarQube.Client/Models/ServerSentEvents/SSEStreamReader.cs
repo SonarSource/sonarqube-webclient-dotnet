@@ -92,19 +92,13 @@ namespace SonarQube.Client.Models.ServerSentEvents
         {
             try
             {
-                var sqEvent = await sqSSEStreamReader.ReadAsync();
-
-                return sqEvent;
-            }
-            catch (TaskCanceledException)
-            {
-                return null;
+                return await sqSSEStreamReader.ReadAsync();
             }
             catch (Exception ex)
             {
-                logger.Debug($"[SSEStreamReader] Failed to read sq event: {ex}");
-
-                return null;
+                logger.Warning($"[SSEStreamReader] Underlying stream failure while reading next event: {ex}");
+                sqSSEStreamReader.Dispose();
+                throw;
             }
         }
     }
