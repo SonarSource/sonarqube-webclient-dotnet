@@ -43,21 +43,28 @@ namespace SonarQube.Client.Models.ServerSentEvents.ServerContract
     /// </summary>
     internal sealed class SqSSEStreamReader : ISqSSEStreamReader
     {
-        private readonly StreamReader networkStreamReader;
-        private readonly CancellationToken cancellationToken;
+        private readonly string projectKey;
+        private readonly ISSEConnectionFactory sseConnectionFactory;
+        private const int MaxReconnectionsCount = 5; // possibly needs to be configurable
+        private readonly CancellationToken disposalToken;
         private readonly ISqServerSentEventParser sqServerSentEventParser;
+        private StreamReader currentNetworkStreamReader;
+        private int reconnectionsCount = -1;
 
-        public SqSSEStreamReader(StreamReader networkStreamReader, CancellationToken cancellationToken)
-            : this(networkStreamReader, cancellationToken, new SqServerSentEventParser())
+        public SqSSEStreamReader(string projectKey, ISSEConnectionFactory sseConnectionFactory, CancellationToken disposalToken)
+            : this(projectKey, sseConnectionFactory, disposalToken, new SqServerSentEventParser())
         {
         }
 
-        internal SqSSEStreamReader(StreamReader networkStreamReader,
-            CancellationToken cancellationToken,
+        internal SqSSEStreamReader(
+            string projectKey,
+            ISSEConnectionFactory sseConnectionFactory,
+            CancellationToken disposalToken,
             ISqServerSentEventParser sqServerSentEventParser)
         {
-            this.networkStreamReader = networkStreamReader;
-            this.cancellationToken = cancellationToken;
+            this.projectKey = projectKey;
+            this.sseConnectionFactory = sseConnectionFactory;
+            this.disposalToken = disposalToken;
             this.sqServerSentEventParser = sqServerSentEventParser;
         }
 
@@ -65,9 +72,17 @@ namespace SonarQube.Client.Models.ServerSentEvents.ServerContract
         {
             var eventLines = new List<string>();
 
-            while (!networkStreamReader.EndOfStream && !cancellationToken.IsCancellationRequested)
+            while (!disposalToken.IsCancellationRequested
+                   && await CheckCurrentStreamReaderAndReconnect() 
+                   && !currentNetworkStreamReader.EndOfStream /*I recently discovered that this tries to read the underlying stream synchronously*/)
             {
-                var line = await networkStreamReader.ReadLineAsync();
+                var (isReadSuccessful, line) = await TryReadLine();
+
+                if (isReadSuccessful)
+                {
+                    continue;
+                }
+
                 var isEventEnd = string.IsNullOrEmpty(line);
 
                 if (isEventEnd)
@@ -92,7 +107,52 @@ namespace SonarQube.Client.Models.ServerSentEvents.ServerContract
 
         public void Dispose()
         {
-            networkStreamReader.Dispose();
+            currentNetworkStreamReader?.Dispose();
+        }
+
+        private async Task<bool> CheckCurrentStreamReaderAndReconnect()
+        {
+            if (currentNetworkStreamReader != null)
+            {
+                return true;
+            }
+
+            return await TryReconnect();
+        }
+
+        private async Task<bool> TryReconnect()
+        {
+            if (reconnectionsCount++ > MaxReconnectionsCount)
+            {
+                return false;
+            }
+            
+            // possibly add await Task.Delay(reconnectionsCount * baseRetryDelayMs)
+
+            // possibly need to wrap this into try/catch as well
+            var sseStream = await sseConnectionFactory.CreateSSEConnectionAsync(projectKey, disposalToken);
+
+            if (sseStream == null)
+            {
+                return false;
+            }
+
+            currentNetworkStreamReader = new StreamReader(sseStream);
+            return true;
+        }
+
+        private async Task<(bool isSuccessful, string line)> TryReadLine()
+        {
+            try
+            {
+                return (true, await currentNetworkStreamReader.ReadLineAsync());
+            }
+            catch (Exception)
+            {
+                currentNetworkStreamReader.Dispose();
+                currentNetworkStreamReader = null;
+                return (false, null);
+            }
         }
     }
 }

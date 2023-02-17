@@ -27,7 +27,7 @@ namespace SonarQube.Client.Models.ServerSentEvents
 {
     internal interface ISSEStreamReaderFactory
     {
-        ISSEStreamReader Create(Stream networkStream, CancellationToken cancellationToken);
+        ISSEStreamReader Create(string projectKey, ISSEConnectionFactory sseConnectionFactory, CancellationToken cancellationToken);
     }
 
     internal class SSEStreamReaderFactory : ISSEStreamReaderFactory
@@ -39,9 +39,9 @@ namespace SonarQube.Client.Models.ServerSentEvents
             this.logger = logger;
         }
 
-        public ISSEStreamReader Create(Stream networkStream, CancellationToken cancellationToken)
+        public ISSEStreamReader Create(string projectKey, ISSEConnectionFactory sseConnectionFactory, CancellationToken cancellationToken)
         {
-            var sqStreamReader = new SqSSEStreamReader(new StreamReader(networkStream), cancellationToken);
+            var sqStreamReader = new SqSSEStreamReader(projectKey, sseConnectionFactory, cancellationToken);
             var sseStreamReader = new SSEStreamReader(sqStreamReader, logger);
 
             return sseStreamReader;
